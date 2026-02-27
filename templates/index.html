@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>TraceSIR Agent Demo Web</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --success: #16a34a;
+      --warning: #d97706;
+      --text: #111827;
+      --muted: #6b7280;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                   Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 20px 32px;
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    main {
+      display: flex;
+      height: calc(100vh - 72px);
+    }
+
+    .left-panel {
+      width: 40%;
+      padding: 24px;
+      overflow-y: auto;
+    }
+
+    .right-panel {
+      width: 60%;
+      padding: 24px;
+      border-left: 1px solid var(--border);
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    }
+
+    h2 {
+      margin-top: 0;
+      font-size: 16px;
+    }
+
+    input[type="file"],
+    input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: none;
+      background: var(--primary);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .status-box {
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 13px;
+    }
+
+    .status-row {
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      background: #e5e7eb;
+    }
+
+    .badge.running {
+      background: #fde68a;
+    }
+
+    .badge.finished {
+      background: #bbf7d0;
+    }
+
+    .logs {
+      margin-top: 6px;
+      background: #f9fafb;
+      padding: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      font-size: 12px;
+      border-radius: 6px;
+    }
+
+    .log-header {
+      color: var(--text);
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    #liveLogs {
+      flex: 1;
+      background: #ffffff;
+      color: #111827;
+      padding: 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      overflow-y: auto;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      color: #374151;
+      font-weight: 500;
+    }
+
+    .form-group input {
+      height: 38px;
+      padding: 0 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 14px;
+
+      line-height: 38px;
+      box-sizing: border-box;
+      display: block;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .form-hint {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .masked-input {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      -webkit-text-security: disc;
+    }
+
+    #readmeToggle {
+      position: fixed;
+      top: 14px;
+      right: 18px;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--card);
+      color: var(--text);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      z-index: 1000;
+    }
+
+    #readmeToggle:hover {
+      background: var(--bg);
+    }
+
+    #readmeDrawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 420px;
+      height: 100vh;
+      background: #ffffff;
+      border-left: 1px solid var(--border);
+      box-shadow: -8px 0 24px rgba(0,0,0,0.08);
+      transition: right 0.3s ease;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #readmeDrawer.open {
+      right: 0;
+    }
+
+    .readme-header {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .readme-header button {
+      background: transparent;
+      color: var(--muted);
+      font-size: 16px;
+      padding: 4px 8px;
+    }
+
+    #readmeContent {
+      padding: 16px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    .markdown-body {
+      padding: 16px;
+      font-size: 14px;
+    }
+
+    .markdown-body pre {
+      background: #f6f8fa;
+      padding: 12px;
+      border-radius: 6px;
+    }
+
+    .report-console {
+      flex: 1;
+      background: #0f172a;
+      color: #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      font-family: "JetBrains Mono", Consolas, monospace;
+      font-size: 12px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .report-console .user {
+      color: #38bdf8;
+    }
+
+    .report-console .system {
+      color: #a7f3d0;
+    }
+
+    .report-console .error {
+      color: #fca5a5;
+    }
+
+    .report-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .report-input span {
+      color: #94a3b8;
+      font-family: monospace;
+    }
+
+    .report-input input {
+      flex: 1;
+      height: 36px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      padding: 0 10px;
+      font-family: monospace;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  TraceSIR Agent Demo
+</header>
+
+<main>
+  <section class="left-panel">
+
+    <div class="card">
+      <h2>🧠 LLM 配置</h2>
+      <div class="form-group">
+        <label>Model</label>
+        <input
+          type="text"
+          id="llmModel"
+          placeholder="例如：glm-4.6 / gpt-4o-mini"
+          value="glm-4.6"
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>API Key</label>
+          <input
+            type="text"
+            id="llmApiKey"
+            class="masked-input"
+            placeholder="sk-********"
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Base URL</label>
+          <input
+            type="text"
+            id="llmBaseUrl"
+            placeholder="https://api.openai.com/v1"
+          />
+        </div>
+      </div>
+
+      <div class="form-hint">
+        该配置仅用于 <b>当前任务</b>，不会写入服务器环境变量
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📤 上传分析文件</h2>
+      <input type="file" id="fileInput" />
+      <div class="form-group" style="margin-top: 12px;">
+      <label>📄 报告生成的特殊需求（可选）</label>
+      <textarea
+        id="reportRequirement"
+        placeholder="例如：用英文生成报告；根据other字段的xxx信息生成报告..."
+        rows="4"
+        style="
+          width: 100%;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          font-size: 13px;
+          resize: vertical;
+          line-height: 1.5;
+        "
+      ></textarea>
+      <div class="form-hint">
+        留空表示使用默认报告生成逻辑，默认生成中文报告
+      </div>
+    </div>
+      <button onclick="upload()">创建任务</button>
+      <p id="uploadResult"></p>
+    </div>
+
+    <div class="card">
+      <h2>🔎 查询任务状态</h2>
+      <input type="text" id="jobIdInput" placeholder="输入 job_id" />
+      <button onclick="checkStatus()">查询状态</button>
+      <div id="statusResult"></div>
+    </div>
+
+    <div class="card">
+      <h2>📦 下载分析结果</h2>
+      <input type="text" id="downloadJobId" placeholder="输入 job_id" />
+      <button onclick="download()">下载结果</button>
+    </div>
+
+    <div class="card">
+      <h2>🔁 重跑已有任务</h2>
+      <input
+        type="text"
+        id="rerunJobId"
+        placeholder="输入 job_id"
+      />
+      <div class="form-group" style="margin-top: 12px;">
+      <label>📄 报告生成的特殊需求（可选）</label>
+      <textarea
+        id="rerunReportRequirement"
+        placeholder="例如：用英文生成报告；根据other字段的xxx信息生成报告..."
+        rows="4"
+        style="
+          width: 100%;
+          padding: 10px 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border);
+          font-size: 13px;
+          resize: vertical;
+          line-height: 1.5;
+        "
+      ></textarea>
+      <div class="form-hint">
+        留空表示使用默认报告生成逻辑，默认生成中文报告
+      </div>
+    </div>
+      <button onclick="rerunJob()">重跑任务</button>
+      <p id="rerunResult"></p>
+    </div>
+
+  </section>
+
+
+  <section class="right-panel">
+    <div class="log-header">
+      📡 任务日志
+      <span style="color: var(--muted); font-size: 12px; margin-left: 6px;">
+        （Agent Runtime）
+      </span>
+    </div>
+    <pre id="liveLogs" style="flex: 0 0 35%;"></pre>
+    <div class="log-header" style="margin-top: 14px;">
+      💬 报告修改（Report Console）
+    </div>
+
+    <div id="reportConsole" class="report-console"></div>
+
+    <div class="report-input">
+      <span>&gt;</span>
+      <input
+        type="text"
+        id="reportCommand"
+        placeholder="初次使用时请确保首先输入job_id，返回初始报告后再进行需求对话。"
+        onkeydown="if(event.key==='Enter'){sendReportCommand()}"
+      />
+      <button onclick="sendReportCommand()">发送</button>
+    </div>
+  </section>
+</main>
+
+
+<div id="readmeToggle" title="查看 README">
+  📘
+</div>
+
+<aside id="readmeDrawer">
+  <div class="readme-header">
+    <span>📖 README</span>
+    <button onclick="toggleReadme()">✕</button>
+  </div>
+  <div id="readmeContent">
+加载中...
+  </div>
+</aside>
+
+
+<script>
+  let currentEventSource = null;
+
+  async function loadHistory(jobId) {
+    const resp = await fetch("/jobs/" + jobId);
+    if (!resp.ok) {
+      document.getElementById("liveLogs").textContent =
+        "❌ 无法加载历史日志（job 不存在或已失败）";
+      return;
+    }
+    const data = await resp.json();
+
+    const logBox = document.getElementById("liveLogs");
+    logBox.textContent = "";
+
+    if (data.result?.logs) {
+      data.result.logs.forEach(line => {
+        logBox.textContent += line + "\n";
+      });
+    }
+  }
+
+  async function attachLogs(jobId) {
+    if (currentEventSource) {
+      currentEventSource.close();
+      currentEventSource = null;
+    }
+
+    localStorage.setItem("current_job_id", jobId);
+
+    await loadHistory(jobId);
+    startLogStream(jobId);
+  }
+
+  async function upload() {
+    const file = document.getElementById("fileInput").files[0];
+    if (!file) {
+      alert("请选择文件");
+      return;
+    }
+
+    const model = document.getElementById("llmModel").value.trim();
+    const apiKey = document.getElementById("llmApiKey").value.trim();
+    const baseUrl = document.getElementById("llmBaseUrl").value.trim();
+
+    if (!model || !apiKey || !baseUrl) {
+      alert("请完整填写 LLM 配置（Model / API Key / Base URL）");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const reportRequirement =
+    document.getElementById("reportRequirement").value.trim();
+    formData.append("llm_model", model);
+    formData.append("llm_api_key", apiKey);
+    formData.append("llm_base_url", baseUrl);
+    formData.append("report_requirement", reportRequirement);
+
+    localStorage.setItem("llm_model", model);
+    localStorage.setItem("llm_api_key", apiKey);
+    localStorage.setItem("llm_base_url", baseUrl);
+
+    const resp = await fetch("/jobs", {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await resp.json();
+    const jobId = data.job_id;
+
+    document.getElementById("uploadResult").innerHTML =
+      "✅ job_id: <code>" + jobId + "</code>";
+
+    attachLogs(jobId);
+  }
+
+  async function checkStatus() {
+    const jobId = document.getElementById("jobIdInput").value.trim();
+    const container = document.getElementById("statusResult");
+
+    if (!jobId) {
+      alert("请输入 job_id");
+      return;
+    }
+
+    container.innerHTML = "⏳ 查询中...";
+
+    try {
+      const resp = await fetch("/jobs/" + jobId);
+      if (!resp.ok) {
+        container.innerHTML = "❌ 查询失败，状态码: " + resp.status;
+        return;
+      }
+
+      const data = await resp.json();
+
+      const badgeClass =
+        data.state === "finished" ? "badge finished" :
+        data.state === "running" ? "badge running" :
+        "badge";
+
+      const logsHtml = data.result?.logs
+        ? data.result.logs.map(l => "• " + l).join("\n")
+        : "暂无日志";
+
+      container.innerHTML = `
+        <div class="status-box">
+          <div class="status-row"><b>Job ID：</b>${data.job_id}</div>
+          <div class="status-row">
+            <b>状态：</b>
+            <span class="${badgeClass}">${data.state}</span>
+          </div>
+          <div class="status-row">
+            <b>创建时间：</b>${new Date(data.created_at * 1000).toLocaleString()}
+          </div>
+          <div class="status-row">
+            <b>更新时间：</b>${new Date(data.updated_at * 1000).toLocaleString()}
+          </div>
+          ${data.result ? `
+          <div class="status-row">
+            <b>处理文件数：</b>${data.result.total_files}
+          </div>
+          ` : ""}
+          <details>
+            <summary>🔍 查看原始 JSON</summary>
+            <pre>${JSON.stringify(data, null, 2)}</pre>
+          </details>
+        </div>
+      `;
+
+      attachLogs(jobId);
+
+    } catch (err) {
+      container.innerHTML = "❌ 请求异常：" + err;
+    }
+  }
+
+  function download() {
+    const jobId = document.getElementById("downloadJobId").value.trim();
+    if (!jobId) {
+      alert("请输入 job_id");
+      return;
+    }
+    window.location.href = "/jobs/" + jobId + "/download";
+  }
+
+  function startLogStream(jobId) {
+    const logBox = document.getElementById("liveLogs");
+
+    const evtSource = new EventSource("/jobs/" + jobId + "/stream");
+    currentEventSource = evtSource;
+
+    evtSource.onmessage = async function (e) {
+      if (e.data === "[[DONE]]") {
+        logBox.textContent += "✅ 任务完成\n";
+        evtSource.close();
+
+        appendReportLine("✅ 任务执行完成，正在加载最新报告...", "system");
+
+        if (reportCurrentJobId) {
+          await loadConcludeReport(reportCurrentJobId);
+        }
+
+        return;
+      }
+
+      logBox.textContent += e.data + "\n";
+      logBox.scrollTop = logBox.scrollHeight;
+    };
+
+    evtSource.onerror = function () {
+      evtSource.close();
+    };
+  }
+
+  window.addEventListener("load", () => {
+    const jobId = localStorage.getItem("current_job_id");
+    if (jobId) {
+      attachLogs(jobId);
+    }
+
+    const model = localStorage.getItem("llm_model");
+    const apiKey = localStorage.getItem("llm_api_key");
+    const baseUrl = localStorage.getItem("llm_base_url");
+
+    if (model) document.getElementById("llmModel").value = model;
+    if (apiKey) document.getElementById("llmApiKey").value = apiKey;
+    if (baseUrl) document.getElementById("llmBaseUrl").value = baseUrl;
+  });
+
+
+  let readmeLoaded = false;
+
+  function toggleReadme() {
+    const drawer = document.getElementById("readmeDrawer");
+    drawer.classList.toggle("open");
+
+    if (drawer.classList.contains("open") && !readmeLoaded) {
+      loadReadme();
+      readmeLoaded = true;
+    }
+  }
+
+  document.getElementById("readmeToggle")
+    .addEventListener("click", toggleReadme);
+
+  async function loadReadme() {
+    const box = document.getElementById("readmeContent");
+    try {
+      const resp = await fetch("/readme");
+      if (!resp.ok) {
+        box.innerHTML = "<p>❌ README 加载失败</p>";
+        return;
+      }
+      box.innerHTML = await resp.text();
+    } catch (e) {
+      box.innerHTML = "<p>❌ 请求异常</p>";
+    }
+  }
+
+  async function rerunJob() {
+    const jobId = document.getElementById("rerunJobId").value.trim();
+    if (!jobId) {
+      alert("请输入 job_id");
+      return;
+    }
+    const model = document.getElementById("llmModel").value.trim();
+    const apiKey = document.getElementById("llmApiKey").value.trim();
+    const baseUrl = document.getElementById("llmBaseUrl").value.trim();
+    if (!model || !apiKey || !baseUrl) {
+      alert("请先在上方填写 LLM 配置");
+      return;
+    }
+    const reportRequirement =
+      document.getElementById("rerunReportRequirement").value.trim();
+    const formData = new FormData();
+    formData.append("llm_model", model);
+    formData.append("llm_api_key", apiKey);
+    formData.append("llm_base_url", baseUrl);
+    formData.append("report_requirement", reportRequirement);
+    const resp = await fetch(`/jobs/${jobId}/rerun`, {
+      method: "POST",
+      body: formData
+    });
+    if (!resp.ok) {
+      document.getElementById("rerunResult").textContent =
+        "❌ 重跑失败";
+      return;
+    }
+    const data = await resp.json();
+    document.getElementById("rerunResult").innerHTML =
+      "✅ 已重跑任务，job_id: <code>" + data.job_id + "</code>";
+    attachLogs(jobId);
+  }
+
+
+  let reportCurrentJobId = null;
+
+  function appendReportLine(text, cls = "system") {
+    const box = document.getElementById("reportConsole");
+    const line = document.createElement("div");
+    line.className = cls;
+    line.textContent = text;
+    box.appendChild(line);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  
+  async function sendReportCommand() {
+    const input = document.getElementById("reportCommand");
+    const cmd = input.value.trim();
+    if (!cmd) return;
+    input.value = "";
+
+    appendReportLine("> " + cmd, "user");
+
+    if (!reportCurrentJobId) {
+      reportCurrentJobId = cmd;
+      await loadConcludeReport(cmd);
+      return;
+    }
+
+    await sendNewReportRequirement(reportCurrentJobId, cmd);
+  }
+
+
+  async function loadConcludeReport(jobId) {
+    try {
+      const resp = await fetch(`/jobs/${jobId}/conclude_report`);
+      const data = await resp.json();
+      if (!resp.ok) {
+        appendReportLine(data.detail || "❌ 报告不存在", "error");
+        return;
+      }
+      appendReportLine("📄 conclude_report.md:\n", "system");
+      appendReportLine(data.content, "system");
+    } catch (e) {
+      appendReportLine("❌ 请求失败", "error");
+    }
+  }
+
+
+  async function sendNewReportRequirement(jobId, requirement) {
+    try {
+      const resp = await fetch(`/jobs/${jobId}/report_requirement`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ requirement })
+      });
+      const data = await resp.json();
+      if (!resp.ok) {
+        appendReportLine(data.detail || "❌ 写入失败", "error");
+        return;
+      }
+      appendReportLine("✅ 已提交报告修改需求", "system");
+      attachLogs(jobId);
+    } catch (e) {
+      appendReportLine("❌ 请求异常", "error");
+    }
+  }
+  
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,520 @@
+{
+  "oid": "tau2-42a076a5cdfa4c76ab0c673c2476a92b",
+  "task": "The user is experiencing issues with their mobile data. They are unable to use their phone to browse the internet, and the status bar shows 'No Service'. Customer name: John Smith, phone number: 555-123-2002, current location: abroad in France. They will consider the issue resolved when speed test returns excellent internet speed. They will not change their mobile data plan but they will refuel 2.0 GB of data if necessary.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hi, I’m having an issue with my mobile data. The internet on my phone is either extremely slow or stops working completely. I really need to get excellent internet speed—not just good or fair. Can you help me fix this?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nI can help. First, I need to identify your account to check your line status and any data-usage limits.\n\nPlease provide one of the following:\n- The phone number for the line with the issue\n- Your customer ID\n- Your full name and date of birth (YYYY-MM-DD)\n\nWhile you grab that, please tell me:\n- Are you at home or currently traveling/roaming?\n- Approximately when did this start, and does it happen everywhere or just in some locations?\n- Have you recently changed any settings (like VPN, data saver, or network mode)?\n\nOnce I verify your line, I’ll guide you through quick checks and adjustments to get excellent speed.",
+      "reasoning_content": "\nPlan: Verify the customer, then run diagnostics on the phone’s cellular and mobile data settings using available checks (status, network status, data restriction, VPN, speed test, SIM status, APN). Apply targeted fixes based on findings (toggle airplane mode, mobile data, roaming, data saver, VPN, network mode, APN reset, SIM reseat, reboot). Check line status for suspension and data usage against plan; enable roaming if needed; offer plan change or data refuel if limit reached. Ensure user reboots after relevant changes."
+    },
+    {
+      "role": "user",
+      "content": "My phone number is 555-123-2002, and my name is John Smith. I’m currently traveling abroad in France. The slow or lost data started recently and seems to happen wherever I go—it’s not limited to a specific spot.\n\nAs far as settings go, I haven’t intentionally changed anything like VPN, data saver, or network mode. What should I check first?"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_77a4ed7dbb784c2aae4a493c",
+          "name": "get_customer_by_phone",
+          "function": {
+            "name": "get_customer_by_phone",
+            "arguments": "{\"phone_number\": \"555-123-2002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nIdentify customer via phone, then check line status and roaming. Enable roaming if needed. Then guide user through diagnostics and fixes: toggle airplane mode, enable data/roaming, disable data saver/VPN, check network mode, APN, and speed test. If data limit reached, offer refuel or plan change."
+    },
+    {
+      "role": "tool",
+      "content": "{\"customer_id\": \"C1001\", \"full_name\": \"John Smith\", \"date_of_birth\": \"1985-06-15\", \"email\": \"john.smith@example.com\", \"phone_number\": \"555-123-2002\", \"address\": {\"street\": \"123 Main St\", \"city\": \"Anytown\", \"state\": \"CA\", \"zip_code\": \"90210\"}, \"account_status\": \"Active\", \"payment_methods\": [{\"method_type\": \"Credit Card\", \"account_number_last_4\": \"1235\", \"expiration_date\": \"12/2026\"}], \"line_ids\": [\"L1001\", \"L1002\", \"L1003\"], \"bill_ids\": [\"B1001\", \"B1002\", \"B1003\"], \"created_at\": \"2025-01-15 10:30:00\", \"last_extension_date\": null, \"goodwill_credit_used_this_year\": 25.0}",
+      "tool_call_id": "call_77a4ed7dbb784c2aae4a493c"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_7b59eaeb3a784838972f5f7f",
+          "name": "get_details_by_id",
+          "function": {
+            "name": "get_details_by_id",
+            "arguments": "{\"id\": \"L1001\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nRetrieve details for lines associated with the account to determine which corresponds to the provided phone number and check roaming and data usage."
+    },
+    {
+      "role": "tool",
+      "content": "{\"line_id\": \"L1001\", \"phone_number\": \"555-123-2001\", \"status\": \"Active\", \"plan_id\": \"P1001\", \"device_id\": \"D1001\", \"data_used_gb\": 3.2, \"data_refueling_gb\": 0.0, \"roaming_enabled\": false, \"contract_end_date\": \"2026-12-31\", \"last_plan_change_date\": \"2025-01-10\", \"last_sim_replacement_date\": null, \"suspension_start_date\": null}",
+      "tool_call_id": "call_7b59eaeb3a784838972f5f7f"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_5932c85b965444c284eaa710",
+          "name": "get_details_by_id",
+          "function": {
+            "name": "get_details_by_id",
+            "arguments": "{\"id\": \"L1002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nCheck remaining lines to find the one matching 555-123-2002."
+    },
+    {
+      "role": "tool",
+      "content": "{\"line_id\": \"L1002\", \"phone_number\": \"555-123-2002\", \"status\": \"Active\", \"plan_id\": \"P1002\", \"device_id\": \"D1002\", \"data_used_gb\": 15.1, \"data_refueling_gb\": 0.0, \"roaming_enabled\": true, \"contract_end_date\": \"2026-12-31\", \"last_plan_change_date\": \"2024-12-15\", \"last_sim_replacement_date\": \"2025-01-20\", \"suspension_start_date\": null}",
+      "tool_call_id": "call_5932c85b965444c284eaa710"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_aea16ef372fe485587993ff8",
+          "name": "get_details_by_id",
+          "function": {
+            "name": "get_details_by_id",
+            "arguments": "{\"id\": \"P1002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nFetch plan details for L1002 to check data limit and refueling price, then get current billing cycle data usage."
+    },
+    {
+      "role": "tool",
+      "content": "{\"plan_id\": \"P1002\", \"name\": \"Premium Plan\", \"data_limit_gb\": 15.0, \"price_per_month\": 65.0, \"data_refueling_price_per_gb\": 2.0}",
+      "tool_call_id": "call_aea16ef372fe485587993ff8"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_20bcea171f6a4fc9a731f354",
+          "name": "get_data_usage",
+          "function": {
+            "name": "get_data_usage",
+            "arguments": "{\"customer_id\": \"C1001\", \"line_id\": \"L1002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nRetrieve current billing cycle data usage for L1002 to confirm if data limit exceeded, then prepare to guide user through device checks and potential refueling."
+    },
+    {
+      "role": "tool",
+      "content": "{\"line_id\": \"L1002\", \"data_used_gb\": \"15.1\", \"data_limit_gb\": \"15.0\", \"data_refueling_gb\": \"0.0\", \"cycle_end_date\": \"2025-02-28\"}",
+      "tool_call_id": "call_20bcea171f6a4fc9a731f354"
+    },
+    {
+      "role": "assistant",
+      "content": "\nThanks, John. I’ve found your line ending in 2002. Here’s what I see:\n- Line status: Active\n- Roaming: Enabled on your account\n- Data usage this cycle: 15.1 GB used vs 15.0 GB limit\n- Cycle ends: 2025-02-28\n- Plan: Premium Plan, data refuel at $2/GB\n\nYour data is over the limit, which explains the slowdown or loss of connectivity, especially while roaming. Let’s get this fixed with two steps: restore connectivity now, then confirm you’re set up correctly for roaming in France.\n\nStep 1: Quick fixes on your device to restore connectivity\nPlease do these in order and tell me the results after each step:\n1) Check Airplane Mode\n- Open the status bar at the top of your screen and see if Airplane Mode is ON.\n- If it’s ON, turn it OFF.\n\n2) Verify Mobile Data and Roaming are ON\n- Open your phone’s network settings.\n- Make sure Mobile Data is ON.\n- Make sure Data Roaming is ON (required when abroad).\n\n3) Check Data Saver\n- In settings, look for Data Saver (often under Network & Internet).\n- If Data Saver is ON, turn it OFF.\n\n4) Check VPN\n- If you have a VPN app, turn it OFF temporarily.\n\n5) Test speed\n- Try loading a webpage or app on mobile data only (Wi-Fi OFF) and see if speed improves.\n\nStep 2: Address the data overage\nYou’re at 15.1 GB on a 15 GB plan. To get excellent speeds again right away, we can add more data. Options:\n- Refuel up to 2 GB at $2 per GB.\n- Would you like to add 1 GB or 2 GB now?\n\nIf you prefer a longer-term solution and you expect to use more data while traveling, we can also review plans with higher limits after we restore service.\n\nAdditional checks if speed is still poor after the above\n- If things are still slow, we can reset your APN settings on the phone and then reboot the device.\n- We can also check the network mode preference to make sure you’re set to 4G/5G rather than an older network.\n\nLet me know:\n- After doing Steps 1–5, does speed improve?\n- Do you want me to add 1 GB or 2 GB of data now? I’ll process it and confirm once it’s applied.",
+      "reasoning_content": "\nPrepare a clear response: confirm line status, data overage, roaming enabled; ask permission to run checks via user; offer immediate steps to enable roaming on device and APN reset; present data refuel option; plan to guide through device-side diagnostics."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_QPxVqUnzbuKVr363NEgW6UoW",
+          "name": "check_status_bar",
+          "function": {
+            "name": "check_status_bar",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Status Bar: ✈️ Airplane Mode | 🔒 VPN Connected | 🔋 80%",
+      "tool_call_id": "call_QPxVqUnzbuKVr363NEgW6UoW"
+    },
+    {
+      "role": "user",
+      "content": "I checked my status bar, and it shows that Airplane Mode is ON, and the VPN is connected. What should I do first—turn off Airplane Mode or disconnect the VPN? I can only perform one action at a time."
+    },
+    {
+      "role": "assistant",
+      "content": "\nPlease turn off Airplane Mode first. This will restore your phone’s cellular connection.\n\nAfter Airplane Mode is off and your phone reconnects, disconnect the VPN next. Then:\n- Make sure Mobile Data and Data Roaming are ON\n- Turn off Data Saver if it’s on\n- Test your speed with Wi-Fi OFF\n\nTell me the result after each step.",
+      "reasoning_content": "\nAdvise the user to turn off Airplane Mode first to restore basic cellular connectivity, then disconnect VPN, then test speed."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_mZoEUtSA620Fi2uEjfG2vXtz",
+          "name": "toggle_airplane_mode",
+          "function": {
+            "name": "toggle_airplane_mode",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Airplane Mode is now OFF.\nStatus Bar: 📶¹ Poor | 2G | 📱 Data Enabled | 🔽 Data Saver | 🔒 VPN Connected | 🔋 80%",
+      "tool_call_id": "call_mZoEUtSA620Fi2uEjfG2vXtz"
+    },
+    {
+      "role": "user",
+      "content": "I've turned off Airplane Mode. Now I see that I'm connected to a 2G network with poor signal, mobile data is enabled, Data Saver is ON, and the VPN is still connected.\n\nWhat would you like me to do next? Do you want me to disconnect the VPN now, or turn off Data Saver first?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nTurn off Data Saver next. This removes the background data restriction that can slow speeds.\n\nAfter that, please do these in order and report back after each:\n1) Disconnect the VPN\n2) Change network mode to 4G/5G (so you’re not stuck on 2G)\n3) Make sure Data Roaming is ON\n4) Test speed with Wi-Fi OFF\n\nIf possible, also move a bit to a window or slightly different spot to improve the poor signal. Once we restore connectivity, we can add data to bring your usage back within limits.",
+      "reasoning_content": "\nWe have signal: 2G with poor signal; mobile data enabled; Data Saver ON; VPN still connected; roaming in France. Best order: Data Saver OFF first to remove background restriction, then disconnect VPN, then set network mode to 4G/5G to get off 2G, then toggle roaming to ensure it’s ON if needed, then reboot if necessary. We should guide one action at a time. Also suggest moving to an area with better signal temporarily. Since user asks order, recommend Data Saver OFF next, then VPN, then network mode preference, then toggle roaming if needed, then test. We also need to address data overage via refueling. We can queue that after connectivity steps. We'll ask user to turn off Data Saver now, then report back."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_aw6eIV8sGOMERzAuYIBG6Oqt",
+          "name": "toggle_data_saver_mode",
+          "function": {
+            "name": "toggle_data_saver_mode",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Data Saver Mode is now OFF.\nStatus Bar: 📶¹ Poor | 2G | 📱 Data Enabled | 🔒 VPN Connected | 🔋 80%",
+      "tool_call_id": "call_aw6eIV8sGOMERzAuYIBG6Oqt"
+    },
+    {
+      "role": "user",
+      "content": "I've turned off Data Saver mode, but my phone still shows a poor 2G connection, mobile data enabled, and the VPN is connected.\n\nShould I disconnect the VPN next as you suggested?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYes, please disconnect the VPN next. After that:\n- Switch your network mode to 4G/5G (if your phone lists options, choose something like “4G/5G preferred” or “LTE/5G”)\n- Make sure Data Roaming is ON\n- Test speed with Wi-Fi OFF\n\nLet me know the result after each step. Once we get you on 4G/5G with VPN off, speed should improve. We’ll still need to address the data overage (15.1/15 GB) to prevent throttling—after connectivity is restored, I can add 1 or 2 GB at $2/GB whenever you’re ready.",
+      "reasoning_content": "\nUser confirmed Data Saver off, still on 2G and VPN connected. Next, instruct to disconnect VPN (quick removal of traffic routing), then switch network mode to 4G/5G, then ensure Data Roaming is ON, then test speed. After connectivity improves, address overage with 1–2 GB refuel at $2/GB."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_t6gwJ4IbDFpX1jsBoAarbYRu",
+          "name": "disconnect_vpn",
+          "function": {
+            "name": "disconnect_vpn",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "VPN disconnected successfully.\nStatus Bar: 📶¹ Poor | 2G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_t6gwJ4IbDFpX1jsBoAarbYRu"
+    },
+    {
+      "role": "user",
+      "content": "I've disconnected the VPN. The status bar still shows a poor 2G connection and mobile data is enabled.\n\nShould I go ahead and change the network mode to 4G/5G preferred now?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYes, please change the network mode to 4G/5G preferred now.\n\nAfter that:\n- Make sure Data Roaming is ON\n- Test speed with Wi-Fi OFF\n\nIf the network does not switch to 4G/5G after a minute or two, try toggling Airplane Mode off and on once, then recheck the network. If it’s still stuck on 2G, we can reset your APN settings and reboot the device.",
+      "reasoning_content": "\nInstruct user to set network mode to 4G/5G preferred to move off 2G, ensure data roaming is on, then test speed. If still 2G, try toggling airplane mode, reseat SIM (if needed), and reset APN then reboot. Also plan to address overage (15.1/15 GB) by refueling 1–2 GB at $2/GB after connectivity improves."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_Q8i0dIB7CRkrcN714k3FQOwe",
+          "name": "set_network_mode_preference",
+          "function": {
+            "name": "set_network_mode_preference",
+            "arguments": "{\"mode\": \"4g_5g_preferred\"}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Preferred Network Mode set to: 4g_5g_preferred\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_Q8i0dIB7CRkrcN714k3FQOwe"
+    },
+    {
+      "role": "user",
+      "content": "I’ve changed the network mode to 4G/5G preferred. The status bar now shows excellent signal strength and a 5G connection, with mobile data enabled.\n\nShould I verify Data Roaming next, or go ahead and test my internet speed now?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nGreat—now let’s verify Data Roaming is ON first to ensure you’re properly set for France, then test speed.\n\n1) Confirm Data Roaming is ON in your mobile network settings.\n2) Turn Wi-Fi OFF.\n3) Test your speed by loading a site or running a quick speed test.\n\nOnce you confirm speed is working well, I can also add data right away since you’re slightly over your 15 GB limit. Would you like 1 GB or 2 GB added at $2/GB?",
+      "reasoning_content": "\nUser now has 5G excellent signal after disabling Airplane Mode, Data Saver, VPN, and setting 4G/5G preferred. Priority now is to test speed to confirm performance, then ensure Data Roaming is ON for stability while abroad. Also remind about data overage and offer refueling."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_z4M8OUIlOeRMtzB7d2eDBiGF",
+          "name": "toggle_roaming",
+          "function": {
+            "name": "toggle_roaming",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Data Roaming is now ON.\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_z4M8OUIlOeRMtzB7d2eDBiGF"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_a3rKybqV2pk90av3QxzpT1e9",
+          "name": "run_speed_test",
+          "function": {
+            "name": "run_speed_test",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Speed test failed: No Connection.",
+      "tool_call_id": "call_a3rKybqV2pk90av3QxzpT1e9"
+    },
+    {
+      "role": "user",
+      "content": "I turned Data Roaming ON, and my status bar still shows excellent 5G signal and mobile data enabled. However, when I ran a speed test, it failed and said \"No Connection.\"\n\nWhat should I do next?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nThanks for the details. Even with a strong 5G signal, a “No Connection” result can point to a configuration issue while roaming. Let’s address the most likely causes next.\n\nPlease do these steps in order and let me know the result after each:\n1) Reset APN settings\n- Go to your mobile network settings > Access Point Names (APN) and choose Reset to default or Reset APN.\n- After resetting, reboot the phone.\n\n2) After rebooting, try the speed test again (Wi-Fi OFF).\n\n3) If it still fails, check SIM status\n- In settings, look for SIM status to ensure the SIM shows as Active. If it shows “Missing” or “Locked,” let me know immediately.\n\n4) Optional quick retry: toggle Airplane Mode once\n- Turn Airplane Mode ON, wait 10 seconds, then turn it OFF, wait 30 seconds, and test again.\n\nOnce connectivity is restored, we’ll add 1 or 2 GB of data to bring you back within your limit. Let me know:\n- After Step 1+2, does the speed test work?\n- If not, what does SIM status show in Step 3?",
+      "reasoning_content": "\nUser has 5G signal but speed test fails with “No Connection.” Likely causes while roaming abroad: line-level roaming not enabled (but account shows true), APN settings missing/incorrect for roaming, data overage causing throttling/block, or local SIM profile issue. Next steps: check/reset APN, reboot, test again; if still no connection, check SIM status and possibly reseat; as last resort, toggle Airplane Mode once more. Also plan to refuel 1–2 GB due to overage once connectivity is restored."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_tRBLahiMNDSxC4IWJCMNv0si",
+          "name": "reset_apn_settings",
+          "function": {
+            "name": "reset_apn_settings",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "APN settings will reset at reboot.\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_tRBLahiMNDSxC4IWJCMNv0si"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_jGnIILX0SW3Ee63fL6vrHd4m",
+          "name": "reboot_device",
+          "function": {
+            "name": "reboot_device",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Resetting APN settings...\nRestarting network services...\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_jGnIILX0SW3Ee63fL6vrHd4m"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_ep93HBwmxtARSZNPjoI5rZhy",
+          "name": "run_speed_test",
+          "function": {
+            "name": "run_speed_test",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Speed test failed: No Connection.",
+      "tool_call_id": "call_ep93HBwmxtARSZNPjoI5rZhy"
+    },
+    {
+      "role": "user",
+      "content": "I reset my APN settings and rebooted the device. After that, I ran another speed test with Wi-Fi off, but it still says “No Connection.”\n\nWould you like me to check the SIM status next?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYes, please check the SIM status next.\n\nLet me know what it shows:\n- Active\n- Missing\n- Locked\n\nIf it says Active, I’ll guide you to a quick Airplane Mode toggle and then address the data overage since you’re still at 15.1 GB on a 15 GB plan. If it says Missing or Locked, tell me immediately so I can provide the right steps.",
+      "reasoning_content": "\nUser still shows no connection after APN reset and reboot. Next step is to check SIM status. Depending on the result (Active, Missing, Locked), guide actions: if Missing, reseat SIM; if Active, proceed to Airplane Mode toggle and maybe data refuel if data overage still blocks connectivity; if Locked, escalate."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_YQGetUppcVApi5QV65KmTIA0",
+          "name": "check_sim_status",
+          "function": {
+            "name": "check_sim_status",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Your SIM card is active and working.",
+      "tool_call_id": "call_YQGetUppcVApi5QV65KmTIA0"
+    },
+    {
+      "role": "user",
+      "content": "My SIM status shows that it is active and working.\n\nShould I go ahead and try toggling Airplane Mode next?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYes, please toggle Airplane Mode next:\n- Turn Airplane Mode ON for 10 seconds, then turn it OFF.\n- Wait about 30 seconds for the network to re-register.\n- With Wi-Fi OFF, run the speed test again.\n\nLet me know the result. If it still shows “No Connection,” we may need a specialist to check provisioning on the roaming network, and I can transfer you to a human agent to resolve it. \n\nAlso, once connectivity is restored, do you want me to add 1 GB or 2 GB of data to bring you back within your 15 GB limit?",
+      "reasoning_content": "\nSIM is active and roaming-enabled, strong 5G signal but no connection post-APN reset. Next: toggle Airplane Mode, then test again. If still no connection, device-level checks beyond scope; transfer to human after final diagnostics. Also prepare to address overage (add data) once connectivity returns."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_eLPEsO7lHpMFrYafwMCd7abP",
+          "name": "toggle_airplane_mode",
+          "function": {
+            "name": "toggle_airplane_mode",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Airplane Mode is now ON.\nStatus Bar: ✈️ Airplane Mode | 🔋 80%",
+      "tool_call_id": "call_eLPEsO7lHpMFrYafwMCd7abP"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_oCjuMCXnC2MdISo8fXyv48xO",
+          "name": "toggle_airplane_mode",
+          "function": {
+            "name": "toggle_airplane_mode",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Airplane Mode is now OFF.\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_oCjuMCXnC2MdISo8fXyv48xO"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_FnED9p15n9lOPVsldiu4A5ay",
+          "name": "run_speed_test",
+          "function": {
+            "name": "run_speed_test",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Speed test failed: No Connection.",
+      "tool_call_id": "call_FnED9p15n9lOPVsldiu4A5ay"
+    },
+    {
+      "role": "user",
+      "content": "I toggled Airplane Mode as you directed and waited for the network to reconnect. I ran the speed test again with Wi-Fi off, but it still says “No Connection.”\n\nShould I be transferred to a specialist, or is there anything else I should try before that? Also, I would like to add 2 GB of data once the connection issue is sorted out."
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_5115e63413e9461c9ac114f1",
+          "name": "transfer_to_human_agents",
+          "function": {
+            "name": "transfer_to_human_agents",
+            "arguments": "{\"summary\": \"Customer John Smith (customer_id C1001) traveling in France reports mobile data extremely slow or not working on line 555-123-2002 (line_id L1002). Diagnostics: Line status Active; Roaming Enabled; Data usage 15.1 GB over 15 GB limit; cycle ends 2025-02-28. User steps completed: turned off Airplane Mode, turned off Data Saver, disconnected VPN, changed network mode to 4G/5G preferred, confirmed Data Roaming ON. Status bar shows excellent 5G signal, mobile data ON. Speed test still shows 'No Connection'. Reset APN settings and rebooted; SIM status Active; toggled Airplane Mode again. No change. Likely roaming provisioning or network registration issue beyond device configuration. Request: add 2 GB data refuel ($2/GB) after connectivity restored. Please verify roaming service provision on the local partner network and address the 'No Connection' despite 5G registration.\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nConnectivity persists with 5G signal but no connection after APN reset, reboot, airplane toggle; SIM active; Data Roaming ON. Likely roaming provisioning or network issue beyond device settings. Transfer to human agent with full summary, and note plan to add 2GB after restoration."
+    },
+    {
+      "role": "tool",
+      "content": "Transfer successful",
+      "tool_call_id": "call_5115e63413e9461c9ac114f1"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.",
+      "reasoning_content": "\nTransfer already initiated in previous step; now send the required transfer notification to the user per policy."
+    },
+    {
+      "role": "user",
+      "content": "###TRANSFER###"
+    }
+  ],
+  "gold_score": 0,
+  "gold_judge": [
+    "###FAIL###Info:{'env': {'note': \"ENV_ASSERTION reward:0.0,DB_reward:0.0, env_assertion_reward:0.0, Eval info : \\n Database mismatched. db_reward set to 0. \\n\\n Env mismatched. env_assertion_reward set to 0. Unmatched result:env_assertion=EnvAssertion(env_type='user', func_name='assert_mobile_data_status', arguments={'expected_status': True}, assert_value=True, message=None) met=False reward=0.0\\n Env mismatched. env_assertion_reward set to 0. Unmatched result:env_assertion=EnvAssertion(env_type='user', func_name='assert_internet_speed', arguments={'expected_desc': 'excellent', 'expected_speed': 200}, assert_value=True, message=None) met=False reward=0.0\\n Env mismatched. env_assertion_reward set to 0. Unmatched result:env_assertion=EnvAssertion(env_type='assistant', func_name='assert_data_refueling_amount', arguments={'customer_id': 'C1001', 'expected_amount': 2, 'line_id': 'L1002'}, assert_value=True, message=None) met=False reward=0.0\"}, 'nl': {'note': 'No nl_assertions to evaluate. Set to 1.0 as default.'}, 'communicate': {'note': 'No communicate_info to evaluate. Set to 1.0 as default.'}, 'action': {'note': \"ACTION reward:0.0, unfullfilled results : [ActionCheck(action=Action(action_id='refuel_data_4', requestor='assistant', name='refuel_data', arguments={'customer_id': 'C1001', 'gb_amount': 2, 'line_id': 'L1002'}, info=None, compare_args=None), action_match=False, action_reward=0.0)]\"}}"
+  ],
+  "other": ""
+}

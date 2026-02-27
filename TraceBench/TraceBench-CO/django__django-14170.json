@@ -1,0 +1,896 @@
+{
+  "oid": "django__django-14170",
+  "task": "<pr_description>\nConsider the following PR description:\nQuery optimization in YearLookup breaks filtering by \"__iso_year\"\nDescription\n\t \n\t\t(last modified by Florian Demmer)\n\t \nThe optimization to use BETWEEN instead of the EXTRACT operation in ​YearLookup is also registered for the ​\"__iso_year\" lookup, which breaks the functionality provided by ​ExtractIsoYear when used via the lookup.\nThis has unfortunately been broken ever since ExtractIsoYear was introduced in ​Django 2.2 via #28649 and wasn't easy to track down since ExtractIsoYear when used by itself eg. in an annotation works perfectly fine. Just when using the lookup in a filter, the optimization is used (even when explicitly using an annotation):\n# annotation works\n>>> qs = DTModel.objects.annotate(extracted=ExtractIsoYear('start_date')).only('id')\n>>> print(qs.query)\nSELECT \"db_functions_dtmodel\".\"id\", EXTRACT('isoyear' FROM \"db_functions_dtmodel\".\"start_date\") AS \"extracted\" FROM \"db_functions_dtmodel\"\n# explicit annotation used in filter does not use \"extracted\" and adds BETWEEN\n>>> print(qs.filter(extracted=2020).query)\nSELECT \"db_functions_dtmodel\".\"id\", EXTRACT('isoyear' FROM \"db_functions_dtmodel\".\"start_date\") AS \"extracted\" FROM \"db_functions_dtmodel\" WHERE \"db_functions_dtmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\n# implicit lookup uses BETWEEN\n>>> print(DTModel.objects.filter(start_date__iso_year=2020).only('id').query)\nSELECT \"db_functions_dtmodel\".\"id\" FROM \"db_functions_dtmodel\" WHERE \"db_functions_dtmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nThis results in the wrong data being returned by filters using iso_year.\nThis PR fixes the behaviour, reverts the invalid changes to the tests and extends one test to catch this problem: ​https://github.com/django/django/pull/14157\n\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<pr_description>\nConsider the following PR description:\nQuery optimization in YearLookup breaks filtering by \"__iso_year\"\nDescription\n\t \n\t\t(last modified by Florian Demmer)\n\t \nThe optimization to use BETWEEN instead of the EXTRACT operation in ​YearLookup is also registered for the ​\"__iso_year\" lookup, which breaks the functionality provided by ​ExtractIsoYear when used via the lookup.\nThis has unfortunately been broken ever since ExtractIsoYear was introduced in ​Django 2.2 via #28649 and wasn't easy to track down since ExtractIsoYear when used by itself eg. in an annotation works perfectly fine. Just when using the lookup in a filter, the optimization is used (even when explicitly using an annotation):\n# annotation works\n>>> qs = DTModel.objects.annotate(extracted=ExtractIsoYear('start_date')).only('id')\n>>> print(qs.query)\nSELECT \"db_functions_dtmodel\".\"id\", EXTRACT('isoyear' FROM \"db_functions_dtmodel\".\"start_date\") AS \"extracted\" FROM \"db_functions_dtmodel\"\n# explicit annotation used in filter does not use \"extracted\" and adds BETWEEN\n>>> print(qs.filter(extracted=2020).query)\nSELECT \"db_functions_dtmodel\".\"id\", EXTRACT('isoyear' FROM \"db_functions_dtmodel\".\"start_date\") AS \"extracted\" FROM \"db_functions_dtmodel\" WHERE \"db_functions_dtmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\n# implicit lookup uses BETWEEN\n>>> print(DTModel.objects.filter(start_date__iso_year=2020).only('id').query)\nSELECT \"db_functions_dtmodel\".\"id\" FROM \"db_functions_dtmodel\" WHERE \"db_functions_dtmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nThis results in the wrong data being returned by filters using iso_year.\nThis PR fixes the behaviour, reverts the invalid changes to the tests and extends one test to catch this problem: ​https://github.com/django/django/pull/14157\n\n</pr_description>\n\n<instructions>\n# Task Instructions\n\n## Overview\nYou're a software engineer interacting continuously with a computer by submitting commands.\nYou'll be helping implement necessary changes to meet requirements in the PR description.\nYour task is specifically to make changes to non-test files in the current directory in order to fix the issue described in the PR description in a way that is general and consistent with the codebase.\n\nIMPORTANT: This is an interactive process where you will think and issue ONE command, see its result, then think and issue your next command.\n\nFor each response:\n1. Include a THOUGHT section explaining your reasoning and what you're trying to accomplish\n2. Provide exactly ONE bash command to execute\n\n## Important Boundaries\n- MODIFY: Regular source code files in /testbed (this is the working directory for all your subsequent commands)\n- DO NOT MODIFY: Tests, configuration files (pyproject.toml, setup.cfg, etc.)\n\n## Recommended Workflow\n1. Analyze the codebase by finding and reading relevant files\n2. Create a script to reproduce the issue\n3. Edit the source code to resolve the issue\n4. Verify your fix works by running your script again\n5. Test edge cases to ensure your fix is robust\n\n## Command Execution Rules\nYou are operating in an environment where\n1. You write a single command\n2. The system executes that command in a subshell\n3. You see the result\n4. You write your next command\n\nEach response should include:\n1. A **THOUGHT** section where you explain your reasoning and plan\n2. A single bash code block with your command\n\nFormat your responses like this:\n\n<format_example>\nTHOUGHT: Here I explain my reasoning process, analysis of the current situation,\nand what I'm trying to accomplish with the command below.\n\n```bash\nyour_command_here\n```\n</format_example>\n\nCommands must be specified in a single bash code block:\n\n```bash\nyour_command_here\n```\n\n**CRITICAL REQUIREMENTS:**\n- Your response SHOULD include a THOUGHT section explaining your reasoning\n- Your response MUST include EXACTLY ONE bash code block\n- This bash block MUST contain EXACTLY ONE command (or a set of commands connected with && or ||)\n- If you include zero or multiple bash blocks, or no command at all, YOUR RESPONSE WILL FAIL\n- Do NOT try to run multiple independent commands in separate blocks in one response\n- Directory or environment variable changes are not persistent. Every action is executed in a new subshell.\n- However, you can prefix any action with `MY_ENV_VAR=MY_VALUE cd /path/to/working/dir && ...` or write/load environment variables from files\n\nExample of a CORRECT response:\n<example_response>\nTHOUGHT: I need to understand the structure of the repository first. Let me check what files are in the current directory to get a better understanding of the codebase.\n\n```bash\nls -la\n```\n</example_response>\n\nExample of an INCORRECT response:\n<example_response>\nTHOUGHT: I need to examine the codebase and then look at a specific file. I'll run multiple commands to do this.\n\n```bash\nls -la\n```\n\nNow I'll read the file:\n\n```bash\ncat file.txt\n```\n</example_response>\n\nIf you need to run multiple commands, either:\n1. Combine them in one block using && or ||\n```bash\ncommand1 && command2 || echo \"Error occurred\"\n```\n\n2. Wait for the first command to complete, see its output, then issue the next command in your following response.\n\n## Environment Details\n- You have a full Linux shell environment\n- Always use non-interactive flags (-y, -f) for commands\n- Avoid interactive tools like vi, nano, or any that require user input\n- If a command isn't available, you can install it\n\n## Useful Command Examples\n\n### Create a new file:\n```bash\ncat <<'EOF' > newfile.py\nimport numpy as np\nhello = \"world\"\nprint(hello)\nEOF\n```\n\n### Edit files with sed:\n```bash\n# Replace all occurrences\nsed -i 's/old_string/new_string/g' filename.py\n\n# Replace only first occurrence\nsed -i 's/old_string/new_string/' filename.py\n\n# Replace first occurrence on line 1\nsed -i '1s/old_string/new_string/' filename.py\n\n# Replace all occurrences in lines 1-10\nsed -i '1,10s/old_string/new_string/g' filename.py\n```\n\n### View file content:\n```bash\n# View specific lines with numbers\nnl -ba filename.py | sed -n '10,20p'\n```\n\n### Any other command you want to run\n```bash\nanything\n```\n\n## Submission\nWhen you've completed your work (reading, editing, testing), and cannot make further progress\nissue exactly the following command:\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```\n\nThis command will submit your work.\nYou cannot continue working (reading, editing, testing) in any way on this task after submitting.\n</instructions>",
+      "timestamp": 1764664953.5143793
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: I need to understand the structure of the Django codebase and locate the files related to YearLookup and ExtractIsoYear functionality. The PR description mentions that the optimization in YearLookup is incorrectly applied to the \"__iso_year\" lookup, breaking the functionality. Let me start by exploring the codebase structure to find the relevant files.\n\n```bash\nfind . -name \"*.py\" | grep -E \"(lookup|year)\" | head -20\n```\n\n",
+      "timestamp": 1764664956.4407127,
+      "extra": {
+        "response": {
+          "id": "20251202164234e0c276f6b6454b95",
+          "created": 1764664956,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: I need to understand the structure of the Django codebase and locate the files related to YearLookup and ExtractIsoYear functionality. The PR description mentions that the optimization in YearLookup is incorrectly applied to the \"__iso_year\" lookup, breaking the functionality. Let me start by exploring the codebase structure to find the relevant files.\n\n```bash\nfind . -name \"*.py\" | grep -E \"(lookup|year)\" | head -20\n```\n\n",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 100,
+            "prompt_tokens": 1627,
+            "total_tokens": 1727,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 122,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164234e0c276f6b6454b95"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./django/db/models/lookups.py\n./django/db/models/fields/related_lookups.py\n./django/contrib/postgres/lookups.py\n./django/contrib/gis/db/models/lookups.py\n./tests/reverse_lookup/models.py\n./tests/reverse_lookup/tests.py\n./tests/reverse_lookup/__init__.py\n./tests/lookup/test_timefield.py\n./tests/lookup/models.py\n./tests/lookup/tests.py\n./tests/lookup/__init__.py\n./tests/lookup/test_lookups.py\n./tests/lookup/test_decimalfield.py\n./tests/migrations/migrations_test_apps/lookuperror_a/models.py\n./tests/migrations/migrations_test_apps/lookuperror_a/__init__.py\n./tests/migrations/migrations_test_apps/lookuperror_a/migrations/__init__.py\n./tests/migrations/migrations_test_apps/lookuperror_a/migrations/0002_a2.py\n./tests/migrations/migrations_test_apps/lookuperror_a/migrations/0004_a4.py\n./tests/migrations/migrations_test_apps/lookuperror_a/migrations/0003_a3.py\n./tests/migrations/migrations_test_apps/lookuperror_a/migrations/0001_initial.py\n</output>",
+      "timestamp": 1764664958.5282712
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: I can see there are several lookup-related files. The main one is likely `./django/db/models/lookups.py`. Let me also search for files related to date/time functions and ExtractIsoYear specifically.\n\n```bash\nfind . -name \"*.py\" | xargs grep -l \"ExtractIsoYear\\|YearLookup\" | head -10\n```",
+      "timestamp": 1764664960.7454562,
+      "extra": {
+        "response": {
+          "id": "2025120216423903b8bfb4cc0040ea",
+          "created": 1764664960,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: I can see there are several lookup-related files. The main one is likely `./django/db/models/lookups.py`. Let me also search for files related to date/time functions and ExtractIsoYear specifically.\n\n```bash\nfind . -name \"*.py\" | xargs grep -l \"ExtractIsoYear\\|YearLookup\" | head -10\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 82,
+            "prompt_tokens": 1998,
+            "total_tokens": 2080,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 122,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "2025120216423903b8bfb4cc0040ea"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./django/db/models/functions/__init__.py\n./django/db/models/functions/datetime.py\n./django/db/models/lookups.py\n./tests/db_functions/datetime/test_extract_trunc.py\n./tests/lookup/test_lookups.py\n</output>",
+      "timestamp": 1764664963.7115672
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Great! Now I can see the key files. Let me examine the main files mentioned in the issue - the lookups.py file which should contain YearLookup, and the datetime.py file which likely contains ExtractIsoYear. Let me start with lookups.py to understand the current implementation.\n\n```bash\ncat ./django/db/models/lookups.py\n```",
+      "timestamp": 1764664966.2159276,
+      "extra": {
+        "response": {
+          "id": "20251202164244ea616bd6f82a4a70",
+          "created": 1764664965,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Great! Now I can see the key files. Let me examine the main files mentioned in the issue - the lookups.py file which should contain YearLookup, and the datetime.py file which likely contains ExtractIsoYear. Let me start with lookups.py to understand the current implementation.\n\n```bash\ncat ./django/db/models/lookups.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 80,
+            "prompt_tokens": 2146,
+            "total_tokens": 2226,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 1724,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164244ea616bd6f82a4a70"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\nimport itertools\nimport math\nfrom copy import copy\n\nfrom django.core.exceptions import EmptyResultSet\nfrom django.db.models.expressions import Case, Exists, Func, Value, When\nfrom django.db.models.fields import (\n    CharField, DateTimeField, Field, IntegerField, UUIDField,\n)\nfrom django.db.models.query_utils import RegisterLookupMixin\nfrom django.utils.datastructures import OrderedSet\nfrom django.utils.functional import cached_property\nfrom django.utils.hashable import make_hashable\n\n\nclass Lookup:\n    lookup_name = None\n    prepare_rhs = True\n    can_use_none_as_rhs = False\n\n    def __init__(self, lhs, rhs):\n        self.lhs, self.rhs = lhs, rhs\n        self.rhs = self.get_prep_lookup()\n        if hasattr(self.lhs, 'get_bilateral_transforms'):\n            bilateral_transforms = self.lhs.get_bilateral_transforms()\n        else:\n            bilateral_transforms = []\n        if bilateral_transforms:\n            # Warn the user as soon as possible if they are trying to apply\n            # a bilateral transformation on a nested QuerySet: that won't work.\n            from django.db.models.sql.query import (  # avoid circular import\n                Query,\n            )\n            if isinstance(rhs, Query):\n                raise NotImplementedError(\"Bilateral transformations on nested querysets are not implemented.\")\n        self.bilateral_transforms = bilateral_transforms\n\n    def apply_bilateral_transforms(self, value):\n        for transform in self.bilateral_transforms:\n            value = transform(value)\n        return value\n\n    def batch_process_rhs(self, compiler, connection, rhs=None):\n        if rhs is None:\n            rhs = self.rhs\n        if self.bilateral_transforms:\n            sqls, sqls_params = [], []\n            for p in rhs:\n                value = Value(p, output_field=self.lhs.output_field)\n                value = self.apply_bilateral_transforms(value)\n                value = value.resolve_expression(compiler.query)\n                sql, sql_params = compiler.compile(value)\n                sqls.append(sql)\n                sqls_params.extend(sql_params)\n        else:\n            _, params = self.get_db_prep_lookup(rhs, connection)\n            sqls, sqls_params = ['%s'] * len(params), params\n        return sqls, sqls_params\n\n    def get_source_expressions(self):\n        if self.rhs_is_direct_value():\n            return [self.lhs]\n        return [self.lhs, self.rhs]\n\n    def set_source_expressions(self, new_exprs):\n        if len(new_exprs) == 1:\n            self.lhs = new_exprs[0]\n        else:\n            self.lhs, self.rhs = new_exprs\n\n    def get_prep_lookup(self):\n        if hasattr(self.rhs, 'resolve_expression'):\n            return self.rhs\n        if self.prepare_rhs and hasattr(self.lhs.output_field, 'get_prep_value'):\n            return self.lhs.output_field.get_prep_value(self.rhs)\n        return self.rhs\n\n    def get_db_prep_lookup(self, value, connection):\n        return ('%s', [value])\n\n    def process_lhs(self, compiler, connection, lhs=None):\n        lhs = lhs or self.lhs\n        if hasattr(lhs, 'resolve_expression'):\n            lhs = lhs.resolve_expression(compiler.query)\n        return compiler.compile(lhs)\n\n    def process_rhs(self, compiler, connection):\n        value = self.rhs\n        if self.bilateral_transforms:\n            if self.rhs_is_direct_value():\n                # Do not call get_db_prep_lookup here as the value will be\n                # transformed before being used for lookup\n                value = Value(value, output_field=self.lhs.output_field)\n            value = self.apply_bilateral_transforms(value)\n            value = value.resolve_expression(compiler.query)\n        if hasattr(value, 'as_sql'):\n            return compiler.compile(value)\n        else:\n            return self.get_db_prep_lookup(value, connection)\n\n    def rhs_is_direct_value(self):\n        return not hasattr(self.rhs, 'as_sql')\n\n    def relabeled_clone(self, relabels):\n        new = copy(self)\n        new.lhs = new.lhs.relabeled_clone(relabels)\n        if hasattr(new.rhs, 'relabeled_clone'):\n            new.rhs = new.rhs.relabeled_clone(relabels)\n        return new\n\n    def get_group_by_cols(self, alias=None):\n        cols = self.lhs.get_group_by_cols()\n        if hasattr(self.rhs, 'get_group_by_cols'):\n            cols.extend(self.rhs.get_group_by_cols())\n        return cols\n\n    def as_sql(self, compiler, connection):\n        raise NotImplementedError\n\n    def as_oracle(self, compiler, connection):\n        # Oracle doesn't allow EXISTS() to be compared to another expression\n        # unless it's wrapped in a CASE WHEN.\n        wrapped = False\n        exprs = []\n        for expr in (self.lhs, self.rhs):\n            if isinstance(expr, Exists):\n                expr = Case(When(expr, then=True), default=False)\n                wrapped = True\n            exprs.append(expr)\n        lookup = type(self)(*exprs) if wrapped else self\n        return lookup.as_sql(compiler, connection)\n\n    @cache\n</output_head>\n<elided_chars>\n12750 characters elided\n</elided_chars>\n<output_tail>\nns'\n\n\n@Field.register_lookup\nclass StartsWith(PatternLookup):\n    lookup_name = 'startswith'\n    param_pattern = '%s%%'\n\n\n@Field.register_lookup\nclass IStartsWith(StartsWith):\n    lookup_name = 'istartswith'\n\n\n@Field.register_lookup\nclass EndsWith(PatternLookup):\n    lookup_name = 'endswith'\n    param_pattern = '%%%s'\n\n\n@Field.register_lookup\nclass IEndsWith(EndsWith):\n    lookup_name = 'iendswith'\n\n\n@Field.register_lookup\nclass Range(FieldGetDbPrepValueIterableMixin, BuiltinLookup):\n    lookup_name = 'range'\n\n    def get_rhs_op(self, connection, rhs):\n        return \"BETWEEN %s AND %s\" % (rhs[0], rhs[1])\n\n\n@Field.register_lookup\nclass IsNull(BuiltinLookup):\n    lookup_name = 'isnull'\n    prepare_rhs = False\n\n    def as_sql(self, compiler, connection):\n        if not isinstance(self.rhs, bool):\n            raise ValueError(\n                'The QuerySet value for an isnull lookup must be True or '\n                'False.'\n            )\n        sql, params = compiler.compile(self.lhs)\n        if self.rhs:\n            return \"%s IS NULL\" % sql, params\n        else:\n            return \"%s IS NOT NULL\" % sql, params\n\n\n@Field.register_lookup\nclass Regex(BuiltinLookup):\n    lookup_name = 'regex'\n    prepare_rhs = False\n\n    def as_sql(self, compiler, connection):\n        if self.lookup_name in connection.operators:\n            return super().as_sql(compiler, connection)\n        else:\n            lhs, lhs_params = self.process_lhs(compiler, connection)\n            rhs, rhs_params = self.process_rhs(compiler, connection)\n            sql_template = connection.ops.regex_lookup(self.lookup_name)\n            return sql_template % (lhs, rhs), lhs_params + rhs_params\n\n\n@Field.register_lookup\nclass IRegex(Regex):\n    lookup_name = 'iregex'\n\n\nclass YearLookup(Lookup):\n    def year_lookup_bounds(self, connection, year):\n        output_field = self.lhs.lhs.output_field\n        if isinstance(output_field, DateTimeField):\n            bounds = connection.ops.year_lookup_bounds_for_datetime_field(year)\n        else:\n            bounds = connection.ops.year_lookup_bounds_for_date_field(year)\n        return bounds\n\n    def as_sql(self, compiler, connection):\n        # Avoid the extract operation if the rhs is a direct value to allow\n        # indexes to be used.\n        if self.rhs_is_direct_value():\n            # Skip the extract part by directly using the originating field,\n            # that is self.lhs.lhs.\n            lhs_sql, params = self.process_lhs(compiler, connection, self.lhs.lhs)\n            rhs_sql, _ = self.process_rhs(compiler, connection)\n            rhs_sql = self.get_direct_rhs_sql(connection, rhs_sql)\n            start, finish = self.year_lookup_bounds(connection, self.rhs)\n            params.extend(self.get_bound_params(start, finish))\n            return '%s %s' % (lhs_sql, rhs_sql), params\n        return super().as_sql(compiler, connection)\n\n    def get_direct_rhs_sql(self, connection, rhs):\n        return connection.operators[self.lookup_name] % rhs\n\n    def get_bound_params(self, start, finish):\n        raise NotImplementedError(\n            'subclasses of YearLookup must provide a get_bound_params() method'\n        )\n\n\nclass YearExact(YearLookup, Exact):\n    def get_direct_rhs_sql(self, connection, rhs):\n        return 'BETWEEN %s AND %s'\n\n    def get_bound_params(self, start, finish):\n        return (start, finish)\n\n\nclass YearGt(YearLookup, GreaterThan):\n    def get_bound_params(self, start, finish):\n        return (finish,)\n\n\nclass YearGte(YearLookup, GreaterThanOrEqual):\n    def get_bound_params(self, start, finish):\n        return (start,)\n\n\nclass YearLt(YearLookup, LessThan):\n    def get_bound_params(self, start, finish):\n        return (start,)\n\n\nclass YearLte(YearLookup, LessThanOrEqual):\n    def get_bound_params(self, start, finish):\n        return (finish,)\n\n\nclass UUIDTextMixin:\n    \"\"\"\n    Strip hyphens from a value when filtering a UUIDField on backends without\n    a native datatype for UUID.\n    \"\"\"\n    def process_rhs(self, qn, connection):\n        if not connection.features.has_native_uuid_field:\n            from django.db.models.functions import Replace\n            if self.rhs_is_direct_value():\n                self.rhs = Value(self.rhs)\n            self.rhs = Replace(self.rhs, Value('-'), Value(''), output_field=CharField())\n        rhs, params = super().process_rhs(qn, connection)\n        return rhs, params\n\n\n@UUIDField.register_lookup\nclass UUIDIExact(UUIDTextMixin, IExact):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDContains(UUIDTextMixin, Contains):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDIContains(UUIDTextMixin, IContains):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDStartsWith(UUIDTextMixin, StartsWith):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDIStartsWith(UUIDTextMixin, IStartsWith):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDEndsWith(UUIDTextMixin, EndsWith):\n    pass\n\n\n@UUIDField.register_lookup\nclass UUIDIEndsWith(UUIDTextMixin, IEndsWith):\n    pass\n\n</output_tail>",
+      "timestamp": 1764664966.3874276
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Now I can see the YearLookup class and its subclasses. The issue is that YearLookup has an optimization that uses BETWEEN instead of EXTRACT when the rhs is a direct value. Let me now look at the datetime.py file to understand how ExtractIsoYear is implemented and how it relates to the YearLookup.\n\n```bash\ncat ./django/db/models/functions/datetime.py\n```",
+      "timestamp": 1764664968.4466782,
+      "extra": {
+        "response": {
+          "id": "2025120216424789d2d5009287437f",
+          "created": 1764664968,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Now I can see the YearLookup class and its subclasses. The issue is that YearLookup has an optimization that uses BETWEEN instead of EXTRACT when the rhs is a direct value. Let me now look at the datetime.py file to understand how ExtractIsoYear is implemented and how it relates to the YearLookup.\n\n```bash\ncat ./django/db/models/functions/datetime.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 85,
+            "prompt_tokens": 4579,
+            "total_tokens": 4664,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 2079,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "2025120216424789d2d5009287437f"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\nfrom datetime import datetime\n\nfrom django.conf import settings\nfrom django.db.models.expressions import Func\nfrom django.db.models.fields import (\n    DateField, DateTimeField, DurationField, Field, IntegerField, TimeField,\n)\nfrom django.db.models.lookups import (\n    Transform, YearExact, YearGt, YearGte, YearLt, YearLte,\n)\nfrom django.utils import timezone\n\n\nclass TimezoneMixin:\n    tzinfo = None\n\n    def get_tzname(self):\n        # Timezone conversions must happen to the input datetime *before*\n        # applying a function. 2015-12-31 23:00:00 -02:00 is stored in the\n        # database as 2016-01-01 01:00:00 +00:00. Any results should be\n        # based on the input datetime not the stored datetime.\n        tzname = None\n        if settings.USE_TZ:\n            if self.tzinfo is None:\n                tzname = timezone.get_current_timezone_name()\n            else:\n                tzname = timezone._get_timezone_name(self.tzinfo)\n        return tzname\n\n\nclass Extract(TimezoneMixin, Transform):\n    lookup_name = None\n    output_field = IntegerField()\n\n    def __init__(self, expression, lookup_name=None, tzinfo=None, **extra):\n        if self.lookup_name is None:\n            self.lookup_name = lookup_name\n        if self.lookup_name is None:\n            raise ValueError('lookup_name must be provided')\n        self.tzinfo = tzinfo\n        super().__init__(expression, **extra)\n\n    def as_sql(self, compiler, connection):\n        sql, params = compiler.compile(self.lhs)\n        lhs_output_field = self.lhs.output_field\n        if isinstance(lhs_output_field, DateTimeField):\n            tzname = self.get_tzname()\n            sql = connection.ops.datetime_extract_sql(self.lookup_name, sql, tzname)\n        elif self.tzinfo is not None:\n            raise ValueError('tzinfo can only be used with DateTimeField.')\n        elif isinstance(lhs_output_field, DateField):\n            sql = connection.ops.date_extract_sql(self.lookup_name, sql)\n        elif isinstance(lhs_output_field, TimeField):\n            sql = connection.ops.time_extract_sql(self.lookup_name, sql)\n        elif isinstance(lhs_output_field, DurationField):\n            if not connection.features.has_native_duration_field:\n                raise ValueError('Extract requires native DurationField database support.')\n            sql = connection.ops.time_extract_sql(self.lookup_name, sql)\n        else:\n            # resolve_expression has already validated the output_field so this\n            # assert should never be hit.\n            assert False, \"Tried to Extract from an invalid type.\"\n        return sql, params\n\n    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):\n        copy = super().resolve_expression(query, allow_joins, reuse, summarize, for_save)\n        field = copy.lhs.output_field\n        if not isinstance(field, (DateField, DateTimeField, TimeField, DurationField)):\n            raise ValueError(\n                'Extract input expression must be DateField, DateTimeField, '\n                'TimeField, or DurationField.'\n            )\n        # Passing dates to functions expecting datetimes is most likely a mistake.\n        if type(field) == DateField and copy.lookup_name in ('hour', 'minute', 'second'):\n            raise ValueError(\n                \"Cannot extract time component '%s' from DateField '%s'. \" % (copy.lookup_name, field.name)\n            )\n        if (\n            isinstance(field, DurationField) and\n            copy.lookup_name in ('year', 'iso_year', 'month', 'week', 'week_day', 'iso_week_day', 'quarter')\n        ):\n            raise ValueError(\n                \"Cannot extract component '%s' from DurationField '%s'.\"\n                % (copy.lookup_name, field.name)\n            )\n        return copy\n\n\nclass ExtractYear(Extract):\n    lookup_name = 'year'\n\n\nclass ExtractIsoYear(Extract):\n    \"\"\"Return the ISO-8601 week-numbering year.\"\"\"\n    lookup_name = 'iso_year'\n\n\nclass ExtractMonth(Extract):\n    lookup_name = 'month'\n\n\nclass ExtractDay(Extract):\n    lookup_name = 'day'\n\n\nclass ExtractWeek(Extract):\n    \"\"\"\n    Return 1-52 or 53, based on ISO-8601, i.e., Monday is the first of the\n    week.\n    \"\"\"\n    lookup_name = 'week'\n\n\nclass ExtractWeekDay(Extract):\n    \"\"\"\n    Return Sunday=1 through Saturday=7.\n\n    To replicate this in Python: (mydatetime.isoweekday() % 7) + 1\n    \"\"\"\n    lookup_name = 'week_day'\n\n\nclass ExtractIsoWeekDay(Extract):\n    \"\"\"Return Monday=1 through Sunday=7, based on ISO-8601.\"\"\"\n    lookup_name = 'iso_week_day'\n\n\nclass ExtractQuarter(Extract):\n    lookup_name = 'quarter'\n\n\nclass ExtractHour(Extract):\n    lookup_name = 'hour'\n\n\nclass ExtractMinute(Extract):\n    lookup_name = 'minute'\n\n\nclass ExtractSecond(Extract):\n    lookup_name = 'second'\n\n\nDateField.register_lookup(ExtractYear)\nDateField.register_lookup(ExtractMonth)\nDateField.register_lookup(ExtractDay)\nDateField.register_lookup(ExtractWeekDay)\nDateField.register_lookup(ExtractIsoWeekDay)\nDateField.re\n</output_head>\n<elided_chars>\n1827 characters elided\n</elided_chars>\n<output_tail>\nield.')\n        if isinstance(self.output_field, DateTimeField):\n            sql = connection.ops.datetime_trunc_sql(self.kind, inner_sql, tzname)\n        elif isinstance(self.output_field, DateField):\n            sql = connection.ops.date_trunc_sql(self.kind, inner_sql, tzname)\n        elif isinstance(self.output_field, TimeField):\n            sql = connection.ops.time_trunc_sql(self.kind, inner_sql, tzname)\n        else:\n            raise ValueError('Trunc only valid on DateField, TimeField, or DateTimeField.')\n        return sql, inner_params\n\n    def resolve_expression(self, query=None, allow_joins=True, reuse=None, summarize=False, for_save=False):\n        copy = super().resolve_expression(query, allow_joins, reuse, summarize, for_save)\n        field = copy.lhs.output_field\n        # DateTimeField is a subclass of DateField so this works for both.\n        assert isinstance(field, (DateField, TimeField)), (\n            \"%r isn't a DateField, TimeField, or DateTimeField.\" % field.name\n        )\n        # If self.output_field was None, then accessing the field will trigger\n        # the resolver to assign it to self.lhs.output_field.\n        if not isinstance(copy.output_field, (DateField, DateTimeField, TimeField)):\n            raise ValueError('output_field must be either DateField, TimeField, or DateTimeField')\n        # Passing dates or times to functions expecting datetimes is most\n        # likely a mistake.\n        class_output_field = self.__class__.output_field if isinstance(self.__class__.output_field, Field) else None\n        output_field = class_output_field or copy.output_field\n        has_explicit_output_field = class_output_field or field.__class__ is not copy.output_field.__class__\n        if type(field) == DateField and (\n                isinstance(output_field, DateTimeField) or copy.kind in ('hour', 'minute', 'second', 'time')):\n            raise ValueError(\"Cannot truncate DateField '%s' to %s. \" % (\n                field.name, output_field.__class__.__name__ if has_explicit_output_field else 'DateTimeField'\n            ))\n        elif isinstance(field, TimeField) and (\n                isinstance(output_field, DateTimeField) or\n                copy.kind in ('year', 'quarter', 'month', 'week', 'day', 'date')):\n            raise ValueError(\"Cannot truncate TimeField '%s' to %s. \" % (\n                field.name, output_field.__class__.__name__ if has_explicit_output_field else 'DateTimeField'\n            ))\n        return copy\n\n    def convert_value(self, value, expression, connection):\n        if isinstance(self.output_field, DateTimeField):\n            if not settings.USE_TZ:\n                pass\n            elif value is not None:\n                value = value.replace(tzinfo=None)\n                value = timezone.make_aware(value, self.tzinfo, is_dst=self.is_dst)\n            elif not connection.features.has_zoneinfo_database:\n                raise ValueError(\n                    'Database returned an invalid datetime value. Are time '\n                    'zone definitions for your database installed?'\n                )\n        elif isinstance(value, datetime):\n            if value is None:\n                pass\n            elif isinstance(self.output_field, DateField):\n                value = value.date()\n            elif isinstance(self.output_field, TimeField):\n                value = value.time()\n        return value\n\n\nclass Trunc(TruncBase):\n\n    def __init__(self, expression, kind, output_field=None, tzinfo=None, is_dst=None, **extra):\n        self.kind = kind\n        super().__init__(\n            expression, output_field=output_field, tzinfo=tzinfo,\n            is_dst=is_dst, **extra\n        )\n\n\nclass TruncYear(TruncBase):\n    kind = 'year'\n\n\nclass TruncQuarter(TruncBase):\n    kind = 'quarter'\n\n\nclass TruncMonth(TruncBase):\n    kind = 'month'\n\n\nclass TruncWeek(TruncBase):\n    \"\"\"Truncate to midnight on the Monday of the week.\"\"\"\n    kind = 'week'\n\n\nclass TruncDay(TruncBase):\n    kind = 'day'\n\n\nclass TruncDate(TruncBase):\n    kind = 'date'\n    lookup_name = 'date'\n    output_field = DateField()\n\n    def as_sql(self, compiler, connection):\n        # Cast to date rather than truncate to date.\n        lhs, lhs_params = compiler.compile(self.lhs)\n        tzname = self.get_tzname()\n        sql = connection.ops.datetime_cast_date_sql(lhs, tzname)\n        return sql, lhs_params\n\n\nclass TruncTime(TruncBase):\n    kind = 'time'\n    lookup_name = 'time'\n    output_field = TimeField()\n\n    def as_sql(self, compiler, connection):\n        # Cast to time rather than truncate to time.\n        lhs, lhs_params = compiler.compile(self.lhs)\n        tzname = self.get_tzname()\n        sql = connection.ops.datetime_cast_time_sql(lhs, tzname)\n        return sql, lhs_params\n\n\nclass TruncHour(TruncBase):\n    kind = 'hour'\n\n\nclass TruncMinute(TruncBase):\n    kind = 'minute'\n\n\nclass TruncSecond(TruncBase):\n    kind = 'second'\n\n\nDateTimeField.register_lookup(TruncDate)\nDateTimeField.register_lookup(TruncTime)\n\n</output_tail>",
+      "timestamp": 1764664968.585557
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Now I can see the issue more clearly. Looking at the datetime.py file, I can see that ExtractIsoYear is defined as a subclass of Extract with lookup_name = 'iso_year'. The problem is that at the bottom of the file, I can see that YearExact, YearGt, etc. are registered for ExtractIsoYear. Let me check what the current registration looks like and also search for where these registrations happen.\n\n```bash\ngrep -n \"register_lookup.*Year\" ./django/db/models/functions/datetime.py\n```",
+      "timestamp": 1764664971.089348,
+      "extra": {
+        "response": {
+          "id": "20251202164249999294b9c4e546da",
+          "created": 1764664970,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Now I can see the issue more clearly. Looking at the datetime.py file, I can see that ExtractIsoYear is defined as a subclass of Extract with lookup_name = 'iso_year'. The problem is that at the bottom of the file, I can see that YearExact, YearGt, etc. are registered for ExtractIsoYear. Let me check what the current registration looks like and also search for where these registrations happen.\n\n```bash\ngrep -n \"register_lookup.*Year\" ./django/db/models/functions/datetime.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 118,
+            "prompt_tokens": 7019,
+            "total_tokens": 7137,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 4663,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164249999294b9c4e546da"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n144:DateField.register_lookup(ExtractYear)\n150:DateField.register_lookup(ExtractIsoYear)\n161:ExtractYear.register_lookup(YearExact)\n162:ExtractYear.register_lookup(YearGt)\n163:ExtractYear.register_lookup(YearGte)\n164:ExtractYear.register_lookup(YearLt)\n165:ExtractYear.register_lookup(YearLte)\n167:ExtractIsoYear.register_lookup(YearExact)\n168:ExtractIsoYear.register_lookup(YearGt)\n169:ExtractIsoYear.register_lookup(YearGte)\n170:ExtractIsoYear.register_lookup(YearLt)\n171:ExtractIsoYear.register_lookup(YearLte)\n</output>",
+      "timestamp": 1764664971.2582943
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Perfect! Now I can see the exact problem. The issue is on lines 167-171 where ExtractIsoYear.register_lookup() is called for all the Year* lookup classes (YearExact, YearGt, etc.). This means that when you use `__iso_year` lookup, it uses the YearLookup optimization which converts the query to use BETWEEN instead of the EXTRACT function.\n\nThe problem is that ISO years and calendar years are different:\n- Calendar year: Jan 1 to Dec 31\n- ISO year: Can start in late December of the previous calendar year and end in early January of the next calendar year\n\nSo when YearLookup applies the BETWEEN optimization for 2020, it uses `BETWEEN 2020-01-01 AND 2020-12-31`, but ISO year 2020 might actually be `BETWEEN 2019-12-30 AND 2020-01-03` (exact dates vary).\n\nLet me first create a test script to reproduce this issue, then fix it by removing the Year* lookup registrations from ExtractIsoYear.\n\n```bash\ncat > reproduce_issue.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nScript to reproduce the iso_year lookup issue.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear\nfrom django.db.connection import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Test the issue\nprint(\"=== Testing ExtractIsoYear annotation (should work correctly) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.query))\n\nprint(\"\\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.filter(extracted=2020).query))\n\nprint(\"\\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(str(qs.query))\n\nprint(\"\\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\")\nEOF\npython reproduce_issue.py\n```",
+      "timestamp": 1764664985.223739,
+      "extra": {
+        "response": {
+          "id": "202512021642523602a53b52b443fc",
+          "created": 1764664984,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Perfect! Now I can see the exact problem. The issue is on lines 167-171 where ExtractIsoYear.register_lookup() is called for all the Year* lookup classes (YearExact, YearGt, etc.). This means that when you use `__iso_year` lookup, it uses the YearLookup optimization which converts the query to use BETWEEN instead of the EXTRACT function.\n\nThe problem is that ISO years and calendar years are different:\n- Calendar year: Jan 1 to Dec 31\n- ISO year: Can start in late December of the previous calendar year and end in early January of the next calendar year\n\nSo when YearLookup applies the BETWEEN optimization for 2020, it uses `BETWEEN 2020-01-01 AND 2020-12-31`, but ISO year 2020 might actually be `BETWEEN 2019-12-30 AND 2020-01-03` (exact dates vary).\n\nLet me first create a test script to reproduce this issue, then fix it by removing the Year* lookup registrations from ExtractIsoYear.\n\n```bash\ncat > reproduce_issue.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nScript to reproduce the iso_year lookup issue.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear\nfrom django.db.connection import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Test the issue\nprint(\"=== Testing ExtractIsoYear annotation (should work correctly) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.query))\n\nprint(\"\\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.filter(extracted=2020).query))\n\nprint(\"\\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(str(qs.query))\n\nprint(\"\\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\")\nEOF\npython reproduce_issue.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 589,
+            "prompt_tokens": 7286,
+            "total_tokens": 7875,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 122,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "202512021642523602a53b52b443fc"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>1</returncode>\n<output>\nTraceback (most recent call last):\n  File \"reproduce_issue.py\", line 32, in <module>\n    from django.db.connection import connection\nModuleNotFoundError: No module named 'django.db.connection'\n</output>",
+      "timestamp": 1764664986.6928244
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: I need to fix the import error. The correct import should be `from django.db import connection`. Let me correct the script.\n\n```bash\ncat > reproduce_issue.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nScript to reproduce the iso_year lookup issue.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear\nfrom django.db import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Test the issue\nprint(\"=== Testing ExtractIsoYear annotation (should work correctly) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.query))\n\nprint(\"\\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.filter(extracted=2020).query))\n\nprint(\"\\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(str(qs.query))\n\nprint(\"\\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\")\nEOF\npython reproduce_issue.py\n```",
+      "timestamp": 1764665010.9269066,
+      "extra": {
+        "response": {
+          "id": "202512021643076c9ca213852841de",
+          "created": 1764665010,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: I need to fix the import error. The correct import should be `from django.db import connection`. Let me correct the script.\n\n```bash\ncat > reproduce_issue.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nScript to reproduce the iso_year lookup issue.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear\nfrom django.db import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Test the issue\nprint(\"=== Testing ExtractIsoYear annotation (should work correctly) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.query))\n\nprint(\"\\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\nprint(str(qs.filter(extracted=2020).query))\n\nprint(\"\\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(str(qs.query))\n\nprint(\"\\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\")\nEOF\npython reproduce_issue.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 391,
+            "prompt_tokens": 7935,
+            "total_tokens": 8326,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 7874,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "202512021643076c9ca213852841de"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Testing ExtractIsoYear annotation (should work correctly) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"extracted\" FROM \"test_testmodel\"\n\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"extracted\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\n\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\n\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\n</output>",
+      "timestamp": 1764665011.3421257
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Perfect! The script reproduces the issue exactly as described in the PR. I can see that:\n\n1. ExtractIsoYear annotation works correctly - uses `django_date_extract('iso_year', ...)`\n2. But when used in a filter or as `__iso_year` lookup, it incorrectly uses `BETWEEN 2020-01-01 AND 2020-12-31`\n\nThe problem is that the YearLookup optimization is being applied to ISO years, which is incorrect because ISO years have different date ranges than calendar years.\n\nNow I need to fix this by removing the Year* lookup registrations from ExtractIsoYear. The Year* lookups should only be registered for ExtractYear, not ExtractIsoYear.\n\n```bash\nsed -i '167,171d' ./django/db/models/functions/datetime.py\n```",
+      "timestamp": 1764665039.592883,
+      "extra": {
+        "response": {
+          "id": "20251202164332a32a88169732475e",
+          "created": 1764665039,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Perfect! The script reproduces the issue exactly as described in the PR. I can see that:\n\n1. ExtractIsoYear annotation works correctly - uses `django_date_extract('iso_year', ...)`\n2. But when used in a filter or as `__iso_year` lookup, it incorrectly uses `BETWEEN 2020-01-01 AND 2020-12-31`\n\nThe problem is that the YearLookup optimization is being applied to ISO years, which is incorrect because ISO years have different date ranges than calendar years.\n\nNow I need to fix this by removing the Year* lookup registrations from ExtractIsoYear. The Year* lookups should only be registered for ExtractYear, not ExtractIsoYear.\n\n```bash\nsed -i '167,171d' ./django/db/models/functions/datetime.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 176,
+            "prompt_tokens": 8562,
+            "total_tokens": 8738,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 122,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164332a32a88169732475e"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n</output>",
+      "timestamp": 1764665039.7451813
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Now I've removed the problematic lines that were registering Year* lookups for ExtractIsoYear. Let me verify the change by checking the file around that area to make sure the deletion was correct.\n\n```bash\nsed -n '160,175p' ./django/db/models/functions/datetime.py\n```",
+      "timestamp": 1764665044.8813238,
+      "extra": {
+        "response": {
+          "id": "2025120216440005a7d9d78adb4a7c",
+          "created": 1764665044,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Now I've removed the problematic lines that were registering Year* lookups for ExtractIsoYear. Let me verify the change by checking the file around that area to make sure the deletion was correct.\n\n```bash\nsed -n '160,175p' ./django/db/models/functions/datetime.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 70,
+            "prompt_tokens": 8755,
+            "total_tokens": 8825,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 8325,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "2025120216440005a7d9d78adb4a7c"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n\nExtractYear.register_lookup(YearExact)\nExtractYear.register_lookup(YearGt)\nExtractYear.register_lookup(YearGte)\nExtractYear.register_lookup(YearLt)\nExtractYear.register_lookup(YearLte)\n\n\n\nclass Now(Func):\n    template = 'CURRENT_TIMESTAMP'\n    output_field = DateTimeField()\n\n    def as_postgresql(self, compiler, connection, **extra_context):\n        # PostgreSQL's CURRENT_TIMESTAMP means \"the time at the start of the\n        # transaction\". Use STATEMENT_TIMESTAMP to be cross-compatible with\n</output>",
+      "timestamp": 1764665045.0322971
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Good! The lines were successfully removed. Now ExtractIsoYear no longer has the Year* lookups registered, which means it won't use the BETWEEN optimization. Let me test this fix by running the reproduction script again to see if the behavior is now correct.\n\n```bash\npython reproduce_issue.py\n```",
+      "timestamp": 1764665048.232044,
+      "extra": {
+        "response": {
+          "id": "20251202164406a8f25bca695d45d6",
+          "created": 1764665048,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Good! The lines were successfully removed. Now ExtractIsoYear no longer has the Year* lookups registered, which means it won't use the BETWEEN optimization. Let me test this fix by running the reproduction script again to see if the behavior is now correct.\n\n```bash\npython reproduce_issue.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 70,
+            "prompt_tokens": 8948,
+            "total_tokens": 9018,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 8824,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164406a8f25bca695d45d6"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Testing ExtractIsoYear annotation (should work correctly) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"extracted\" FROM \"test_testmodel\"\n\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"extracted\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\n\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\nSELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\n\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\n</output>",
+      "timestamp": 1764665048.6095316
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Excellent! The fix is working correctly. Now I can see that:\n\n1. ExtractIsoYear annotation still works correctly - uses `django_date_extract('iso_year', ...)`\n2. ExtractIsoYear annotation in filter now correctly uses `WHERE django_date_extract('iso_year', ...) = 2020` (no longer uses BETWEEN)\n3. The `__iso_year` lookup now correctly uses `WHERE django_date_extract('iso_year', ...) = 2020` (no longer uses BETWEEN)\n\nThis is exactly what we wanted! The ISO year lookups now use the EXTRACT function instead of the BETWEEN optimization, which is correct because ISO years don't align with calendar year date ranges.\n\nLet me create a more comprehensive test to verify this works with different comparison operators and edge cases.\n\n```bash\ncat > test_comprehensive.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nComprehensive test for iso_year lookup fix.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear, ExtractYear\nfrom django.db import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\nprint(\"=== Testing ISO year lookups (should use EXTRACT) ===\")\n\n# Test exact match\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(f\"iso_year=2020: {str(qs.query)}\")\n\n# Test greater than\nqs = TestModel.objects.filter(start_date__iso_year__gt=2020)\nprint(f\"iso_year__gt=2020: {str(qs.query)}\")\n\n# Test greater than or equal\nqs = TestModel.objects.filter(start_date__iso_year__gte=2020)\nprint(f\"iso_year__gte=2020: {str(qs.query)}\")\n\n# Test less than\nqs = TestModel.objects.filter(start_date__iso_year__lt=2020)\nprint(f\"iso_year__lt=2020: {str(qs.query)}\")\n\n# Test less than or equal\nqs = TestModel.objects.filter(start_date__iso_year__lte=2020)\nprint(f\"iso_year__lte=2020: {str(qs.query)}\")\n\nprint(\"\\n=== Testing regular year lookups (should still use BETWEEN optimization) ===\")\n\n# Test exact match\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"year=2020: {str(qs.query)}\")\n\n# Test greater than\nqs = TestModel.objects.filter(start_date__year__gt=2020)\nprint(f\"year__gt=2020: {str(qs.query)}\")\n\nprint(\"\\n=== Testing with annotations ===\")\n\n# Test annotation with iso_year\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"annotate iso_year=2020: {str(qs.query)}\")\n\n# Test annotation with regular year\nqs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\nprint(f\"annotate year=2020: {str(qs.query)}\")\n\nprint(\"\\n=== All tests completed ===\")\nEOF\npython test_comprehensive.py\n```",
+      "timestamp": 1764665059.2378483,
+      "extra": {
+        "response": {
+          "id": "20251202164409dab875419b444efb",
+          "created": 1764665059,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Excellent! The fix is working correctly. Now I can see that:\n\n1. ExtractIsoYear annotation still works correctly - uses `django_date_extract('iso_year', ...)`\n2. ExtractIsoYear annotation in filter now correctly uses `WHERE django_date_extract('iso_year', ...) = 2020` (no longer uses BETWEEN)\n3. The `__iso_year` lookup now correctly uses `WHERE django_date_extract('iso_year', ...) = 2020` (no longer uses BETWEEN)\n\nThis is exactly what we wanted! The ISO year lookups now use the EXTRACT function instead of the BETWEEN optimization, which is correct because ISO years don't align with calendar year date ranges.\n\nLet me create a more comprehensive test to verify this works with different comparison operators and edge cases.\n\n```bash\ncat > test_comprehensive.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nComprehensive test for iso_year lookup fix.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=True,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear, ExtractYear\nfrom django.db import connection\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\nprint(\"=== Testing ISO year lookups (should use EXTRACT) ===\")\n\n# Test exact match\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(f\"iso_year=2020: {str(qs.query)}\")\n\n# Test greater than\nqs = TestModel.objects.filter(start_date__iso_year__gt=2020)\nprint(f\"iso_year__gt=2020: {str(qs.query)}\")\n\n# Test greater than or equal\nqs = TestModel.objects.filter(start_date__iso_year__gte=2020)\nprint(f\"iso_year__gte=2020: {str(qs.query)}\")\n\n# Test less than\nqs = TestModel.objects.filter(start_date__iso_year__lt=2020)\nprint(f\"iso_year__lt=2020: {str(qs.query)}\")\n\n# Test less than or equal\nqs = TestModel.objects.filter(start_date__iso_year__lte=2020)\nprint(f\"iso_year__lte=2020: {str(qs.query)}\")\n\nprint(\"\\n=== Testing regular year lookups (should still use BETWEEN optimization) ===\")\n\n# Test exact match\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"year=2020: {str(qs.query)}\")\n\n# Test greater than\nqs = TestModel.objects.filter(start_date__year__gt=2020)\nprint(f\"year__gt=2020: {str(qs.query)}\")\n\nprint(\"\\n=== Testing with annotations ===\")\n\n# Test annotation with iso_year\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"annotate iso_year=2020: {str(qs.query)}\")\n\n# Test annotation with regular year\nqs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\nprint(f\"annotate year=2020: {str(qs.query)}\")\n\nprint(\"\\n=== All tests completed ===\")\nEOF\npython test_comprehensive.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 795,
+            "prompt_tokens": 9244,
+            "total_tokens": 10039,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 9017,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164409dab875419b444efb"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Testing ISO year lookups (should use EXTRACT) ===\niso_year=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\niso_year__gt=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") > 2020\niso_year__gte=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") >= 2020\niso_year__lt=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") < 2020\niso_year__lte=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") <= 2020\n\n=== Testing regular year lookups (should still use BETWEEN optimization) ===\nyear=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nyear__gt=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" > 2020-12-31\n\n=== Testing with annotations ===\nannotate iso_year=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"iso_year\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\nannotate year=2020: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('year', \"test_testmodel\".\"start_date\") AS \"year\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\n\n=== All tests completed ===\n</output>",
+      "timestamp": 1764665059.6259077
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Perfect! The comprehensive test shows that the fix is working exactly as intended:\n\n1. **ISO year lookups now correctly use EXTRACT**: All iso_year lookups (=, >, >=, <, <=) now use `django_date_extract('iso_year', ...)` which is correct.\n\n2. **Regular year lookups still use BETWEEN optimization**: The regular year lookups still use the BETWEEN optimization for better performance when appropriate (`year=2020` uses `BETWEEN 2020-01-01 AND 2020-12-31`).\n\n3. **Annotations work correctly**: Both iso_year and year annotations work as expected.\n\nThis fix addresses the exact issue described in the PR - the iso_year lookups no longer incorrectly use the BETWEEN optimization that was designed for calendar years.\n\nLet me run one more test to make sure we didn't break any existing functionality by checking the existing tests in the Django test suite.\n\n```bash\nfind ./tests -name \"*.py\" -exec grep -l \"iso_year\\|ExtractIsoYear\" {} \\;\n```",
+      "timestamp": 1764665065.7275915,
+      "extra": {
+        "response": {
+          "id": "2025120216442080e38ee10ca94e44",
+          "created": 1764665065,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Perfect! The comprehensive test shows that the fix is working exactly as intended:\n\n1. **ISO year lookups now correctly use EXTRACT**: All iso_year lookups (=, >, >=, <, <=) now use `django_date_extract('iso_year', ...)` which is correct.\n\n2. **Regular year lookups still use BETWEEN optimization**: The regular year lookups still use the BETWEEN optimization for better performance when appropriate (`year=2020` uses `BETWEEN 2020-01-01 AND 2020-12-31`).\n\n3. **Annotations work correctly**: Both iso_year and year annotations work as expected.\n\nThis fix addresses the exact issue described in the PR - the iso_year lookups no longer incorrectly use the BETWEEN optimization that was designed for calendar years.\n\nLet me run one more test to make sure we didn't break any existing functionality by checking the existing tests in the Django test suite.\n\n```bash\nfind ./tests -name \"*.py\" -exec grep -l \"iso_year\\|ExtractIsoYear\" {} \\;\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 226,
+            "prompt_tokens": 10592,
+            "total_tokens": 10818,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 8737,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "2025120216442080e38ee10ca94e44"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n./tests/db_functions/datetime/test_extract_trunc.py\n</output>",
+      "timestamp": 1764665067.451471
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Let me examine the existing test file to make sure our changes don't break any existing tests and understand what the expected behavior should be.\n\n```bash\ncat ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+      "timestamp": 1764665072.2250576,
+      "extra": {
+        "response": {
+          "id": "20251202164428785c28032c154449",
+          "created": 1764665072,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Let me examine the existing test file to make sure our changes don't break any existing tests and understand what the expected behavior should be.\n\n```bash\ncat ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 53,
+            "prompt_tokens": 10847,
+            "total_tokens": 10900,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 123,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164428785c28032c154449"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\nfrom datetime import datetime, timedelta, timezone as datetime_timezone\n\nimport pytz\n\ntry:\n    import zoneinfo\nexcept ImportError:\n    try:\n        from backports import zoneinfo\n    except ImportError:\n        zoneinfo = None\n\nfrom django.conf import settings\nfrom django.db.models import (\n    DateField, DateTimeField, F, IntegerField, Max, OuterRef, Subquery,\n    TimeField,\n)\nfrom django.db.models.functions import (\n    Extract, ExtractDay, ExtractHour, ExtractIsoWeekDay, ExtractIsoYear,\n    ExtractMinute, ExtractMonth, ExtractQuarter, ExtractSecond, ExtractWeek,\n    ExtractWeekDay, ExtractYear, Trunc, TruncDate, TruncDay, TruncHour,\n    TruncMinute, TruncMonth, TruncQuarter, TruncSecond, TruncTime, TruncWeek,\n    TruncYear,\n)\nfrom django.test import (\n    TestCase, override_settings, skipIfDBFeature, skipUnlessDBFeature,\n)\nfrom django.utils import timezone\n\nfrom ..models import Author, DTModel, Fan\n\nZONE_CONSTRUCTORS = (pytz.timezone,)\nif zoneinfo is not None:\n    ZONE_CONSTRUCTORS += (zoneinfo.ZoneInfo,)\n\n\ndef truncate_to(value, kind, tzinfo=None):\n    # Convert to target timezone before truncation\n    if tzinfo is not None:\n        value = value.astimezone(tzinfo)\n\n    def truncate(value, kind):\n        if kind == 'second':\n            return value.replace(microsecond=0)\n        if kind == 'minute':\n            return value.replace(second=0, microsecond=0)\n        if kind == 'hour':\n            return value.replace(minute=0, second=0, microsecond=0)\n        if kind == 'day':\n            if isinstance(value, datetime):\n                return value.replace(hour=0, minute=0, second=0, microsecond=0)\n            return value\n        if kind == 'week':\n            if isinstance(value, datetime):\n                return (value - timedelta(days=value.weekday())).replace(hour=0, minute=0, second=0, microsecond=0)\n            return value - timedelta(days=value.weekday())\n        if kind == 'month':\n            if isinstance(value, datetime):\n                return value.replace(day=1, hour=0, minute=0, second=0, microsecond=0)\n            return value.replace(day=1)\n        if kind == 'quarter':\n            month_in_quarter = value.month - (value.month - 1) % 3\n            if isinstance(value, datetime):\n                return value.replace(month=month_in_quarter, day=1, hour=0, minute=0, second=0, microsecond=0)\n            return value.replace(month=month_in_quarter, day=1)\n        # otherwise, truncate to year\n        if isinstance(value, datetime):\n            return value.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)\n        return value.replace(month=1, day=1)\n\n    value = truncate(value, kind)\n    if tzinfo is not None:\n        # If there was a daylight saving transition, then reset the timezone.\n        value = timezone.make_aware(value.replace(tzinfo=None), tzinfo)\n    return value\n\n\n@override_settings(USE_TZ=False)\nclass DateFunctionTests(TestCase):\n\n    def create_model(self, start_datetime, end_datetime):\n        return DTModel.objects.create(\n            name=start_datetime.isoformat() if start_datetime else 'None',\n            start_datetime=start_datetime,\n            end_datetime=end_datetime,\n            start_date=start_datetime.date() if start_datetime else None,\n            end_date=end_datetime.date() if end_datetime else None,\n            start_time=start_datetime.time() if start_datetime else None,\n            end_time=end_datetime.time() if end_datetime else None,\n            duration=(end_datetime - start_datetime) if start_datetime and end_datetime else None,\n        )\n\n    def test_extract_year_exact_lookup(self):\n        \"\"\"\n        Extract year uses a BETWEEN filter to compare the year to allow indexes\n        to be used.\n        \"\"\"\n        start_datetime = datetime(2015, 6, 15, 14, 10)\n        end_datetime = datetime(2016, 6, 15, 14, 10)\n        if settings.USE_TZ:\n            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n        self.create_model(start_datetime, end_datetime)\n        self.create_model(end_datetime, start_datetime)\n\n        for lookup in ('year', 'iso_year'):\n            with self.subTest(lookup):\n                qs = DTModel.objects.filter(**{'start_datetime__%s__exact' % lookup: 2015})\n                self.assertEqual(qs.count(), 1)\n                query_string = str(qs.query).lower()\n                self.assertEqual(query_string.count(' between '), 1)\n                self.assertEqual(query_string.count('extract'), 0)\n                # exact is implied and should be the same\n                qs = DTModel.objects.filter(**{'start_datetime__%s' % lookup: 2015})\n                self.assertEqual(qs.count(), 1)\n                query_string = str(qs.query).lower()\n                self.assertEqual(query_string.count(' between '), 1)\n                self.assertEqual(query_string.count('extract'), 0)\n                # date and datetime fields should behave \n</output_head>\n<elided_chars>\n59302 characters elided\n</elided_chars>\n<output_tail>\nted datetime transitions to a different offset (daylight\n        saving) then the returned value will have that new timezone/offset.\n        \"\"\"\n        start_datetime = datetime(2015, 6, 15, 14, 30, 50, 321)\n        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n        start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n        end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n        self.create_model(start_datetime, end_datetime)\n        self.create_model(end_datetime, start_datetime)\n\n        for melb in self.get_timezones('Australia/Melbourne'):\n            with self.subTest(repr(melb)):\n                def test_datetime_kind(kind):\n                    self.assertQuerysetEqual(\n                        DTModel.objects.annotate(\n                            truncated=Trunc(\n                                'start_datetime', kind, output_field=DateTimeField(), tzinfo=melb\n                            )\n                        ).order_by('start_datetime'),\n                        [\n                            (start_datetime, truncate_to(start_datetime.astimezone(melb), kind, melb)),\n                            (end_datetime, truncate_to(end_datetime.astimezone(melb), kind, melb))\n                        ],\n                        lambda m: (m.start_datetime, m.truncated)\n                    )\n\n                def test_datetime_to_date_kind(kind):\n                    self.assertQuerysetEqual(\n                        DTModel.objects.annotate(\n                            truncated=Trunc(\n                                'start_datetime',\n                                kind,\n                                output_field=DateField(),\n                                tzinfo=melb,\n                            ),\n                        ).order_by('start_datetime'),\n                        [\n                            (\n                                start_datetime,\n                                truncate_to(start_datetime.astimezone(melb).date(), kind),\n                            ),\n                            (\n                                end_datetime,\n                                truncate_to(end_datetime.astimezone(melb).date(), kind),\n                            ),\n                        ],\n                        lambda m: (m.start_datetime, m.truncated),\n                    )\n\n                def test_datetime_to_time_kind(kind):\n                    self.assertQuerysetEqual(\n                        DTModel.objects.annotate(\n                            truncated=Trunc(\n                                'start_datetime',\n                                kind,\n                                output_field=TimeField(),\n                                tzinfo=melb,\n                            )\n                        ).order_by('start_datetime'),\n                        [\n                            (\n                                start_datetime,\n                                truncate_to(start_datetime.astimezone(melb).time(), kind),\n                            ),\n                            (\n                                end_datetime,\n                                truncate_to(end_datetime.astimezone(melb).time(), kind),\n                            ),\n                        ],\n                        lambda m: (m.start_datetime, m.truncated),\n                    )\n\n                test_datetime_to_date_kind('year')\n                test_datetime_to_date_kind('quarter')\n                test_datetime_to_date_kind('month')\n                test_datetime_to_date_kind('week')\n                test_datetime_to_date_kind('day')\n                test_datetime_to_time_kind('hour')\n                test_datetime_to_time_kind('minute')\n                test_datetime_to_time_kind('second')\n                test_datetime_kind('year')\n                test_datetime_kind('quarter')\n                test_datetime_kind('month')\n                test_datetime_kind('week')\n                test_datetime_kind('day')\n                test_datetime_kind('hour')\n                test_datetime_kind('minute')\n                test_datetime_kind('second')\n\n                qs = DTModel.objects.filter(\n                    start_datetime__date=Trunc('start_datetime', 'day', output_field=DateField())\n                )\n                self.assertEqual(qs.count(), 2)\n\n    def test_trunc_invalid_field_with_timezone(self):\n        for melb in self.get_timezones('Australia/Melbourne'):\n            with self.subTest(repr(melb)):\n                msg = 'tzinfo can only be used with DateTimeField.'\n                with self.assertRaisesMessage(ValueError, msg):\n                    DTModel.objects.annotate(\n                        day_melb=Trunc('start_date', 'day', tzinfo=melb),\n                    ).get()\n                with self.assertRaisesMessage(ValueError, msg):\n                    DTModel.objects.annotate(\n                        hour_melb=Trunc('start_time', 'hour', tzinfo=melb),\n                    ).get()\n\n</output_tail>",
+      "timestamp": 1764665072.4199748
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: I can see from the test file that there's a specific test `test_extract_year_exact_lookup` that tests both 'year' and 'iso_year' lookups, and it expects BOTH to use the BETWEEN optimization. This test will now fail with my fix because iso_year should no longer use BETWEEN. Let me look at this specific test more closely to understand what needs to be updated.\n\n```bash\ngrep -n -A 20 \"test_extract_year_exact_lookup\" ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+      "timestamp": 1764665076.3181067,
+      "extra": {
+        "response": {
+          "id": "2025120216443308c5ba8ba1ba4877",
+          "created": 1764665076,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: I can see from the test file that there's a specific test `test_extract_year_exact_lookup` that tests both 'year' and 'iso_year' lookups, and it expects BOTH to use the BETWEEN optimization. This test will now fail with my fix because iso_year should no longer use BETWEEN. Let me look at this specific test more closely to understand what needs to be updated.\n\n```bash\ngrep -n -A 20 \"test_extract_year_exact_lookup\" ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 117,
+            "prompt_tokens": 13001,
+            "total_tokens": 13118,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 10899,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "2025120216443308c5ba8ba1ba4877"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n93:    def test_extract_year_exact_lookup(self):\n94-        \"\"\"\n95-        Extract year uses a BETWEEN filter to compare the year to allow indexes\n96-        to be used.\n97-        \"\"\"\n98-        start_datetime = datetime(2015, 6, 15, 14, 10)\n99-        end_datetime = datetime(2016, 6, 15, 14, 10)\n100-        if settings.USE_TZ:\n101-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n102-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n103-        self.create_model(start_datetime, end_datetime)\n104-        self.create_model(end_datetime, start_datetime)\n105-\n106-        for lookup in ('year', 'iso_year'):\n107-            with self.subTest(lookup):\n108-                qs = DTModel.objects.filter(**{'start_datetime__%s__exact' % lookup: 2015})\n109-                self.assertEqual(qs.count(), 1)\n110-                query_string = str(qs.query).lower()\n111-                self.assertEqual(query_string.count(' between '), 1)\n112-                self.assertEqual(query_string.count('extract'), 0)\n113-                # exact is implied and should be the same\n</output>",
+      "timestamp": 1764665076.4934158
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: I can see the issue now. The test `test_extract_year_exact_lookup` expects both 'year' and 'iso_year' lookups to use the BETWEEN optimization, but my fix correctly changes iso_year to use EXTRACT instead. According to the PR description, the existing tests need to be reverted to fix invalid behavior, and one test should be extended to catch this problem.\n\nSince the instructions say I should NOT modify tests, I need to understand if my fix is correct or if I'm misunderstanding something. Let me check if there are any other relevant tests or if I need to adjust my approach.\n\n```bash\ngrep -n -A 30 -B 5 \"iso_year\" ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+      "timestamp": 1764665081.1708407,
+      "extra": {
+        "response": {
+          "id": "20251202164437b2babb65da144de5",
+          "created": 1764665081,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: I can see the issue now. The test `test_extract_year_exact_lookup` expects both 'year' and 'iso_year' lookups to use the BETWEEN optimization, but my fix correctly changes iso_year to use EXTRACT instead. According to the PR description, the existing tests need to be reverted to fix invalid behavior, and one test should be extended to catch this problem.\n\nSince the instructions say I should NOT modify tests, I need to understand if my fix is correct or if I'm misunderstanding something. Let me check if there are any other relevant tests or if I need to adjust my approach.\n\n```bash\ngrep -n -A 30 -B 5 \"iso_year\" ./tests/db_functions/datetime/test_extract_trunc.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 161,
+            "prompt_tokens": 13409,
+            "total_tokens": 13570,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 13117,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164437b2babb65da144de5"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<warning>\nThe output of your last command was too long.\nPlease try a different command that produces less output.\nIf you're looking at a file you can try use head, tail or sed to view a smaller number of lines selectively.\nIf you're using grep or find and it produced too much output, you can use a more selective search pattern.\nIf you really need to see something from the full command's output, you can redirect output to a file and then search in that file.\n</warning><output_head>\n101-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n102-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n103-        self.create_model(start_datetime, end_datetime)\n104-        self.create_model(end_datetime, start_datetime)\n105-\n106:        for lookup in ('year', 'iso_year'):\n107-            with self.subTest(lookup):\n108-                qs = DTModel.objects.filter(**{'start_datetime__%s__exact' % lookup: 2015})\n109-                self.assertEqual(qs.count(), 1)\n110-                query_string = str(qs.query).lower()\n111-                self.assertEqual(query_string.count(' between '), 1)\n112-                self.assertEqual(query_string.count('extract'), 0)\n113-                # exact is implied and should be the same\n114-                qs = DTModel.objects.filter(**{'start_datetime__%s' % lookup: 2015})\n115-                self.assertEqual(qs.count(), 1)\n116-                query_string = str(qs.query).lower()\n117-                self.assertEqual(query_string.count(' between '), 1)\n118-                self.assertEqual(query_string.count('extract'), 0)\n119-                # date and datetime fields should behave the same\n120-                qs = DTModel.objects.filter(**{'start_date__%s' % lookup: 2015})\n121-                self.assertEqual(qs.count(), 1)\n122-                query_string = str(qs.query).lower()\n123-                self.assertEqual(query_string.count(' between '), 1)\n124-                self.assertEqual(query_string.count('extract'), 0)\n125-                # an expression rhs cannot use the between optimization.\n126-                qs = DTModel.objects.annotate(\n127-                    start_year=ExtractYear('start_datetime'),\n128-                ).filter(end_datetime__year=F('start_year') + 1)\n129-                self.assertEqual(qs.count(), 1)\n130-                query_string = str(qs.query).lower()\n131-                self.assertEqual(query_string.count(' between '), 0)\n132-                self.assertEqual(query_string.count('extract'), 3)\n133-\n134-    def test_extract_year_greaterthan_lookup(self):\n135-        start_datetime = datetime(2015, 6, 15, 14, 10)\n136-        end_datetime = datetime(2016, 6, 15, 14, 10)\n--\n138-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n139-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n140-        self.create_model(start_datetime, end_datetime)\n141-        self.create_model(end_datetime, start_datetime)\n142-\n143:        for lookup in ('year', 'iso_year'):\n144-            with self.subTest(lookup):\n145-                qs = DTModel.objects.filter(**{'start_datetime__%s__gt' % lookup: 2015})\n146-                self.assertEqual(qs.count(), 1)\n147-                self.assertEqual(str(qs.query).lower().count('extract'), 0)\n148-                qs = DTModel.objects.filter(**{'start_datetime__%s__gte' % lookup: 2015})\n149-                self.assertEqual(qs.count(), 2)\n150-                self.assertEqual(str(qs.query).lower().count('extract'), 0)\n151-                qs = DTModel.objects.annotate(\n152-                    start_year=ExtractYear('start_datetime'),\n153-                ).filter(**{'end_datetime__%s__gte' % lookup: F('start_year')})\n154-                self.assertEqual(qs.count(), 1)\n155-                self.assertGreaterEqual(str(qs.query).lower().count('extract'), 2)\n156-\n157-    def test_extract_year_lessthan_lookup(self):\n158-        start_datetime = datetime(2015, 6, 15, 14, 10)\n159-        end_datetime = datetime(2016, 6, 15, 14, 10)\n160-        if settings.USE_TZ:\n161-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n162-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n163-        self.create_model(start_datetime, end_datetime)\n164-        self.create_model(end_datetime, start_datetime)\n165-\n166:        for lookup in ('year', 'iso_year'):\n167-            with self.subTest(lookup):\n168-                qs = DTModel.objects.filter(**{'start_datetime__%s__lt' % lookup: 2016})\n169-                self.assertEqual(qs.count(), 1)\n170-                self.assertEqual(str(qs.query).count('extract'), 0)\n171-                qs = DTModel.objects.filter(**{'start_datetime__%s__lte' % lookup: 2016})\n172-                self.assertEqual(qs.count(), 2)\n173-                self.assertEqual(str(qs.query).count('extract'), 0)\n174-                qs = DTModel.objects.annotate(\n175-                    end_year=ExtractYear('end_datetime'),\n176-                ).filter(**{'start_datetime__%s__lte' % lookup: F('end_year')})\n177-                self.assertEqual(qs.count(), 1)\n178-                self.assertGreaterEqual(str(qs.query).lower().count('extract'), 2)\n179-\n180-    def test_extract_func(self):\n181-        start_datetime = datetime(2015, 6, 15, 14, 30, 50, 321)\n182-        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n183-        if settings.USE_TZ:\n184-            start_datetime = \n</output_head>\n<elided_chars>\n689 characters elided\n</elided_chars>\n<output_tail>\n297-            list(DTModel.objects.annotate(extracted=Extract('duration', 'second')))\n298-\n299-    def test_extract_duration_unsupported_lookups(self):\n300-        msg = \"Cannot extract component '%s' from DurationField 'duration'.\"\n301-        for lookup in (\n302:            'year', 'iso_year', 'month', 'week', 'week_day', 'iso_week_day',\n303-            'quarter',\n304-        ):\n305-            with self.subTest(lookup):\n306-                with self.assertRaisesMessage(ValueError, msg % lookup):\n307-                    DTModel.objects.annotate(extracted=Extract('duration', lookup))\n308-\n309-    def test_extract_year_func(self):\n310-        start_datetime = datetime(2015, 6, 15, 14, 30, 50, 321)\n311-        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n312-        if settings.USE_TZ:\n313-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n314-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n315-        self.create_model(start_datetime, end_datetime)\n316-        self.create_model(end_datetime, start_datetime)\n317-        self.assertQuerysetEqual(\n318-            DTModel.objects.annotate(extracted=ExtractYear('start_datetime')).order_by('start_datetime'),\n319-            [(start_datetime, start_datetime.year), (end_datetime, end_datetime.year)],\n320-            lambda m: (m.start_datetime, m.extracted)\n321-        )\n322-        self.assertQuerysetEqual(\n323-            DTModel.objects.annotate(extracted=ExtractYear('start_date')).order_by('start_datetime'),\n324-            [(start_datetime, start_datetime.year), (end_datetime, end_datetime.year)],\n325-            lambda m: (m.start_datetime, m.extracted)\n326-        )\n327-        self.assertEqual(DTModel.objects.filter(start_datetime__year=ExtractYear('start_datetime')).count(), 2)\n328-\n329:    def test_extract_iso_year_func(self):\n330-        start_datetime = datetime(2015, 6, 15, 14, 30, 50, 321)\n331-        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n332-        if settings.USE_TZ:\n333-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n334-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n335-        self.create_model(start_datetime, end_datetime)\n336-        self.create_model(end_datetime, start_datetime)\n337-        self.assertQuerysetEqual(\n338-            DTModel.objects.annotate(extracted=ExtractIsoYear('start_datetime')).order_by('start_datetime'),\n339-            [(start_datetime, start_datetime.year), (end_datetime, end_datetime.year)],\n340-            lambda m: (m.start_datetime, m.extracted)\n341-        )\n342-        self.assertQuerysetEqual(\n343-            DTModel.objects.annotate(extracted=ExtractIsoYear('start_date')).order_by('start_datetime'),\n344-            [(start_datetime, start_datetime.year), (end_datetime, end_datetime.year)],\n345-            lambda m: (m.start_datetime, m.extracted)\n346-        )\n347-        # Both dates are from the same week year.\n348:        self.assertEqual(DTModel.objects.filter(start_datetime__iso_year=ExtractIsoYear('start_datetime')).count(), 2)\n349-\n350:    def test_extract_iso_year_func_boundaries(self):\n351-        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n352-        if settings.USE_TZ:\n353-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n354-        week_52_day_2014 = datetime(2014, 12, 27, 13, 0)  # Sunday\n355-        week_1_day_2014_2015 = datetime(2014, 12, 31, 13, 0)  # Wednesday\n356-        week_53_day_2015 = datetime(2015, 12, 31, 13, 0)  # Thursday\n357-        if settings.USE_TZ:\n358-            week_1_day_2014_2015 = timezone.make_aware(week_1_day_2014_2015, is_dst=False)\n359-            week_52_day_2014 = timezone.make_aware(week_52_day_2014, is_dst=False)\n360-            week_53_day_2015 = timezone.make_aware(week_53_day_2015, is_dst=False)\n361-        days = [week_52_day_2014, week_1_day_2014_2015, week_53_day_2015]\n362-        self.create_model(week_53_day_2015, end_datetime)\n363-        self.create_model(week_52_day_2014, end_datetime)\n364-        self.create_model(week_1_day_2014_2015, end_datetime)\n365-        qs = DTModel.objects.filter(start_datetime__in=days).annotate(\n366-            extracted=ExtractIsoYear('start_datetime'),\n367-        ).order_by('start_datetime')\n368-        self.assertQuerysetEqual(qs, [\n369-            (week_52_day_2014, 2014),\n370-            (week_1_day_2014_2015, 2015),\n371-            (week_53_day_2015, 2015),\n372-        ], lambda m: (m.start_datetime, m.extracted))\n373-\n374-    def test_extract_month_func(self):\n375-        start_datetime = datetime(2015, 6, 15, 14, 30, 50, 321)\n376-        end_datetime = datetime(2016, 6, 15, 14, 10, 50, 123)\n377-        if settings.USE_TZ:\n378-            start_datetime = timezone.make_aware(start_datetime, is_dst=False)\n379-            end_datetime = timezone.make_aware(end_datetime, is_dst=False)\n380-        self.create_model(start_datetime, end_datetime)\n\n</output_tail>",
+      "timestamp": 1764665081.3294203
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Now I can see the issue more clearly. The existing tests expect both 'year' and 'iso_year' lookups to use the BETWEEN optimization, but according to the PR description, this is exactly the bug we're trying to fix. The PR mentions that the tests need to be reverted and one test extended to catch this problem.\n\nSince I'm not supposed to modify tests, let me verify that my fix is actually correct by creating a more realistic test that shows the difference between ISO year and calendar year boundaries.\n\n```bash\ncat > test_iso_year_boundaries.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nTest to demonstrate the difference between ISO year and calendar year boundaries.\nThis shows why the BETWEEN optimization is incorrect for ISO years.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=False,  # Simplify for boundary testing\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear, ExtractYear\nfrom django.db import connection\nfrom datetime import datetime\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Create test data around ISO year boundaries\n# December 31, 2019 is in ISO year 2020 (week 1 of 2020)\n# January 1, 2020 is in ISO year 2020 (week 1 of 2020)\n# December 31, 2020 is in ISO year 2020 (week 53 of 2020) \n# January 1, 2021 is in ISO year 2020 (week 53 of 2020)\n\ntest_dates = [\n    datetime(2019, 12, 31).date(),  # ISO year 2020, calendar year 2019\n    datetime(2020, 1, 1).date(),    # ISO year 2020, calendar year 2020\n    datetime(2020, 12, 31).date(),  # ISO year 2020, calendar year 2020\n    datetime(2021, 1, 1).date(),    # ISO year 2020, calendar year 2021\n]\n\nfor date in test_dates:\n    TestModel.objects.create(start_date=date)\n\nprint(\"=== Test Data ===\")\nfor obj in TestModel.objects.all().order_by('start_date'):\n    print(f\"{obj.start_date}: Calendar year={obj.start_date.year}, ISO year calculation needed\")\n\nprint(\"\\n=== Using ExtractIsoYear annotation (correct behavior) ===\")\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Using year lookup (should include 2020 calendar dates) ===\")\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Using iso_year lookup (should include all ISO year 2020 dates) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Expected Results Analysis ===\")\nprint(\"ISO year 2020 should include:\")\nprint(\"- 2019-12-31 (belongs to week 1 of ISO year 2020)\")\nprint(\"- 2020-01-01 (belongs to week 1 of ISO year 2020)\")  \nprint(\"- 2020-12-31 (belongs to week 53 of ISO year 2020)\")\nprint(\"- 2021-01-01 (belongs to week 53 of ISO year 2020)\")\nprint(\"\")\nprint(\"Calendar year 2020 should include:\")\nprint(\"- 2020-01-01\")\nprint(\"- 2020-12-31\")\nprint(\"\")\nprint(\"This shows why BETWEEN optimization is wrong for ISO years!\")\nEOF\npython test_iso_year_boundaries.py\n```",
+      "timestamp": 1764665099.8285112,
+      "extra": {
+        "response": {
+          "id": "20251202164442e9627d9c1ee843f5",
+          "created": 1764665099,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Now I can see the issue more clearly. The existing tests expect both 'year' and 'iso_year' lookups to use the BETWEEN optimization, but according to the PR description, this is exactly the bug we're trying to fix. The PR mentions that the tests need to be reverted and one test extended to catch this problem.\n\nSince I'm not supposed to modify tests, let me verify that my fix is actually correct by creating a more realistic test that shows the difference between ISO year and calendar year boundaries.\n\n```bash\ncat > test_iso_year_boundaries.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nTest to demonstrate the difference between ISO year and calendar year boundaries.\nThis shows why the BETWEEN optimization is incorrect for ISO years.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=False,  # Simplify for boundary testing\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractIsoYear, ExtractYear\nfrom django.db import connection\nfrom datetime import datetime\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Create test data around ISO year boundaries\n# December 31, 2019 is in ISO year 2020 (week 1 of 2020)\n# January 1, 2020 is in ISO year 2020 (week 1 of 2020)\n# December 31, 2020 is in ISO year 2020 (week 53 of 2020) \n# January 1, 2021 is in ISO year 2020 (week 53 of 2020)\n\ntest_dates = [\n    datetime(2019, 12, 31).date(),  # ISO year 2020, calendar year 2019\n    datetime(2020, 1, 1).date(),    # ISO year 2020, calendar year 2020\n    datetime(2020, 12, 31).date(),  # ISO year 2020, calendar year 2020\n    datetime(2021, 1, 1).date(),    # ISO year 2020, calendar year 2021\n]\n\nfor date in test_dates:\n    TestModel.objects.create(start_date=date)\n\nprint(\"=== Test Data ===\")\nfor obj in TestModel.objects.all().order_by('start_date'):\n    print(f\"{obj.start_date}: Calendar year={obj.start_date.year}, ISO year calculation needed\")\n\nprint(\"\\n=== Using ExtractIsoYear annotation (correct behavior) ===\")\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Using year lookup (should include 2020 calendar dates) ===\")\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Using iso_year lookup (should include all ISO year 2020 dates) ===\")\nqs = TestModel.objects.filter(start_date__iso_year=2020)\nprint(f\"Query: {str(qs.query)}\")\nprint(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n\nprint(\"\\n=== Expected Results Analysis ===\")\nprint(\"ISO year 2020 should include:\")\nprint(\"- 2019-12-31 (belongs to week 1 of ISO year 2020)\")\nprint(\"- 2020-01-01 (belongs to week 1 of ISO year 2020)\")  \nprint(\"- 2020-12-31 (belongs to week 53 of ISO year 2020)\")\nprint(\"- 2021-01-01 (belongs to week 53 of ISO year 2020)\")\nprint(\"\")\nprint(\"Calendar year 2020 should include:\")\nprint(\"- 2020-01-01\")\nprint(\"- 2020-12-31\")\nprint(\"\")\nprint(\"This shows why BETWEEN optimization is wrong for ISO years!\")\nEOF\npython test_iso_year_boundaries.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 993,
+            "prompt_tokens": 16360,
+            "total_tokens": 17353,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 10038,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164442e9627d9c1ee843f5"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Test Data ===\n2019-12-31: Calendar year=2019, ISO year calculation needed\n2020-01-01: Calendar year=2020, ISO year calculation needed\n2020-12-31: Calendar year=2020, ISO year calculation needed\n2021-01-01: Calendar year=2021, ISO year calculation needed\n\n=== Using ExtractIsoYear annotation (correct behavior) ===\nQuery: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"iso_year\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\nResults: [datetime.date(2019, 12, 31), datetime.date(2020, 1, 1), datetime.date(2020, 12, 31), datetime.date(2021, 1, 1)]\n\n=== Using year lookup (should include 2020 calendar dates) ===\nQuery: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nResults: [datetime.date(2020, 1, 1), datetime.date(2020, 12, 31)]\n\n=== Using iso_year lookup (should include all ISO year 2020 dates) ===\nQuery: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\nResults: [datetime.date(2019, 12, 31), datetime.date(2020, 1, 1), datetime.date(2020, 12, 31), datetime.date(2021, 1, 1)]\n\n=== Expected Results Analysis ===\nISO year 2020 should include:\n- 2019-12-31 (belongs to week 1 of ISO year 2020)\n- 2020-01-01 (belongs to week 1 of ISO year 2020)\n- 2020-12-31 (belongs to week 53 of ISO year 2020)\n- 2021-01-01 (belongs to week 53 of ISO year 2020)\n\nCalendar year 2020 should include:\n- 2020-01-01\n- 2020-12-31\n\nThis shows why BETWEEN optimization is wrong for ISO years!\n</output>",
+      "timestamp": 1764665100.9856389
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Perfect! This test clearly demonstrates that my fix is correct. The results show:\n\n1. **ExtractIsoYear annotation**: Correctly returns all 4 dates that belong to ISO year 2020, including dates from 2019 and 2021.\n\n2. **Regular year lookup**: Uses BETWEEN optimization and correctly returns only the 2 dates from calendar year 2020.\n\n3. **ISO year lookup**: After my fix, correctly uses EXTRACT function and returns all 4 dates that belong to ISO year 2020.\n\nThis proves that:\n- The BETWEEN optimization is appropriate for calendar years (Jan 1 - Dec 31)\n- The BETWEEN optimization is WRONG for ISO years because ISO years can span parts of multiple calendar years\n- My fix correctly makes ISO year lookups use EXTRACT instead of BETWEEN\n\nThe fix I implemented by removing the Year* lookup registrations from ExtractIsoYear is the correct solution to the problem described in the PR.\n\nLet me run one final test to ensure I haven't broken any other functionality.\n\n```bash\ncat > test_other_lookups.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nTest that other lookups still work correctly after our fix.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=False,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractYear, ExtractMonth, ExtractDay, ExtractIsoYear\nfrom django.db import connection\nfrom datetime import datetime\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Create test data\ntest_dates = [\n    datetime(2020, 6, 15).date(),\n    datetime(2021, 6, 15).date(),\n]\n\nfor date in test_dates:\n    TestModel.objects.create(start_date=date)\n\nprint(\"=== Testing other extract lookups still work ===\")\n\n# Test month extract\nqs = TestModel.objects.filter(start_date__month=6)\nprint(f\"Month lookup: {str(qs.query)}\")\n\n# Test day extract  \nqs = TestModel.objects.filter(start_date__day=15)\nprint(f\"Day lookup: {str(qs.query)}\")\n\n# Test year extract (should still use BETWEEN)\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"Year lookup: {str(qs.query)}\")\n\n# Test with annotations\nqs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\nprint(f\"Annotated year: {str(qs.query)}\")\n\nqs = TestModel.objects.annotate(month=ExtractMonth('start_date')).filter(month=6)\nprint(f\"Annotated month: {str(qs.query)}\")\n\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"Annotated iso_year: {str(qs.query)}\")\n\nprint(\"\\n=== All lookups working correctly ===\")\nEOF\npython test_other_lookups.py\n```",
+      "timestamp": 1764665112.2886648,
+      "extra": {
+        "response": {
+          "id": "202512021645020f7ee70de54640d5",
+          "created": 1764665112,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Perfect! This test clearly demonstrates that my fix is correct. The results show:\n\n1. **ExtractIsoYear annotation**: Correctly returns all 4 dates that belong to ISO year 2020, including dates from 2019 and 2021.\n\n2. **Regular year lookup**: Uses BETWEEN optimization and correctly returns only the 2 dates from calendar year 2020.\n\n3. **ISO year lookup**: After my fix, correctly uses EXTRACT function and returns all 4 dates that belong to ISO year 2020.\n\nThis proves that:\n- The BETWEEN optimization is appropriate for calendar years (Jan 1 - Dec 31)\n- The BETWEEN optimization is WRONG for ISO years because ISO years can span parts of multiple calendar years\n- My fix correctly makes ISO year lookups use EXTRACT instead of BETWEEN\n\nThe fix I implemented by removing the Year* lookup registrations from ExtractIsoYear is the correct solution to the problem described in the PR.\n\nLet me run one final test to ensure I haven't broken any other functionality.\n\n```bash\ncat > test_other_lookups.py <<'EOF'\n#!/usr/bin/env python\n\"\"\"\nTest that other lookups still work correctly after our fix.\n\"\"\"\n\nimport os\nimport sys\nimport django\nfrom django.conf import settings\n\n# Configure Django settings\nsettings.configure(\n    DEBUG=True,\n    DATABASES={\n        'default': {\n            'ENGINE': 'django.db.backends.sqlite3',\n            'NAME': ':memory:',\n        }\n    },\n    USE_TZ=False,\n    INSTALLED_APPS=[\n        'django.contrib.contenttypes',\n        'django.contrib.auth',\n    ],\n    SECRET_KEY='test-secret-key',\n)\n\ndjango.setup()\n\nfrom django.db import models\nfrom django.db.models.functions import ExtractYear, ExtractMonth, ExtractDay, ExtractIsoYear\nfrom django.db import connection\nfrom datetime import datetime\n\n# Create a test model\nclass TestModel(models.Model):\n    start_date = models.DateField()\n    \n    class Meta:\n        app_label = 'test'\n\n# Create table\nwith connection.schema_editor() as schema_editor:\n    schema_editor.create_model(TestModel)\n\n# Create test data\ntest_dates = [\n    datetime(2020, 6, 15).date(),\n    datetime(2021, 6, 15).date(),\n]\n\nfor date in test_dates:\n    TestModel.objects.create(start_date=date)\n\nprint(\"=== Testing other extract lookups still work ===\")\n\n# Test month extract\nqs = TestModel.objects.filter(start_date__month=6)\nprint(f\"Month lookup: {str(qs.query)}\")\n\n# Test day extract  \nqs = TestModel.objects.filter(start_date__day=15)\nprint(f\"Day lookup: {str(qs.query)}\")\n\n# Test year extract (should still use BETWEEN)\nqs = TestModel.objects.filter(start_date__year=2020)\nprint(f\"Year lookup: {str(qs.query)}\")\n\n# Test with annotations\nqs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\nprint(f\"Annotated year: {str(qs.query)}\")\n\nqs = TestModel.objects.annotate(month=ExtractMonth('start_date')).filter(month=6)\nprint(f\"Annotated month: {str(qs.query)}\")\n\nqs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\nprint(f\"Annotated iso_year: {str(qs.query)}\")\n\nprint(\"\\n=== All lookups working correctly ===\")\nEOF\npython test_other_lookups.py\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 732,
+            "prompt_tokens": 17916,
+            "total_tokens": 18648,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 17352,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "202512021645020f7ee70de54640d5"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "<returncode>0</returncode>\n<output>\n=== Testing other extract lookups still work ===\nMonth lookup: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('month', \"test_testmodel\".\"start_date\") = 6\nDay lookup: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE django_date_extract('day', \"test_testmodel\".\"start_date\") = 15\nYear lookup: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nAnnotated year: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('year', \"test_testmodel\".\"start_date\") AS \"year\" FROM \"test_testmodel\" WHERE \"test_testmodel\".\"start_date\" BETWEEN 2020-01-01 AND 2020-12-31\nAnnotated month: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('month', \"test_testmodel\".\"start_date\") AS \"month\" FROM \"test_testmodel\" WHERE django_date_extract('month', \"test_testmodel\".\"start_date\") = 6\nAnnotated iso_year: SELECT \"test_testmodel\".\"id\", \"test_testmodel\".\"start_date\", django_date_extract('iso_year', \"test_testmodel\".\"start_date\") AS \"iso_year\" FROM \"test_testmodel\" WHERE django_date_extract('iso_year', \"test_testmodel\".\"start_date\") = 2020\n\n=== All lookups working correctly ===\n</output>",
+      "timestamp": 1764665115.2256222
+    },
+    {
+      "role": "assistant",
+      "content": "\nTHOUGHT: Excellent! This final test confirms that my fix is working correctly and hasn't broken any other functionality:\n\n1. **Month and Day lookups**: Still correctly use EXTRACT function (they never used BETWEEN optimization)\n2. **Year lookup**: Still correctly uses BETWEEN optimization (this is correct for calendar years)\n3. **Annotated year lookup**: Still correctly uses BETWEEN optimization \n4. **Annotated month lookup**: Still correctly uses EXTRACT function\n5. **Annotated iso_year lookup**: Now correctly uses EXTRACT function (this is the fix)\n\nThe fix I implemented by removing the Year* lookup registrations from ExtractIsoYear is exactly what was needed to solve the issue described in the PR. The change is minimal, targeted, and correct:\n\n- **Problem**: ExtractIsoYear was incorrectly using YearLookup optimization (BETWEEN) designed for calendar years\n- **Root cause**: ExtractIsoYear had Year* lookups registered (lines 167-171 in datetime.py)\n- **Solution**: Remove those registrations so ExtractIsoYear uses the base Transform behavior (EXTRACT function)\n- **Result**: ISO year lookups now correctly use EXTRACT instead of BETWEEN, fixing the data correctness issue\n\nMy fix addresses the core issue while preserving all other functionality. The regular calendar year lookups still benefit from the BETWEEN optimization for better performance, while ISO year lookups now correctly use EXTRACT for accurate results.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+      "timestamp": 1764665122.6750224,
+      "extra": {
+        "response": {
+          "id": "20251202164517ae356ef3cfd741b2",
+          "created": 1764665122,
+          "model": "glm-4.6",
+          "object": "chat.completion",
+          "system_fingerprint": null,
+          "choices": [
+            {
+              "finish_reason": "stop",
+              "index": 0,
+              "message": {
+                "content": "\nTHOUGHT: Excellent! This final test confirms that my fix is working correctly and hasn't broken any other functionality:\n\n1. **Month and Day lookups**: Still correctly use EXTRACT function (they never used BETWEEN optimization)\n2. **Year lookup**: Still correctly uses BETWEEN optimization (this is correct for calendar years)\n3. **Annotated year lookup**: Still correctly uses BETWEEN optimization \n4. **Annotated month lookup**: Still correctly uses EXTRACT function\n5. **Annotated iso_year lookup**: Now correctly uses EXTRACT function (this is the fix)\n\nThe fix I implemented by removing the Year* lookup registrations from ExtractIsoYear is exactly what was needed to solve the issue described in the PR. The change is minimal, targeted, and correct:\n\n- **Problem**: ExtractIsoYear was incorrectly using YearLookup optimization (BETWEEN) designed for calendar years\n- **Root cause**: ExtractIsoYear had Year* lookups registered (lines 167-171 in datetime.py)\n- **Solution**: Remove those registrations so ExtractIsoYear uses the base Transform behavior (EXTRACT function)\n- **Result**: ISO year lookups now correctly use EXTRACT instead of BETWEEN, fixing the data correctness issue\n\nMy fix addresses the core issue while preserving all other functionality. The regular calendar year lookups still benefit from the BETWEEN optimization for better performance, while ISO year lookups now correctly use EXTRACT for accurate results.\n\n```bash\necho COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT && git add -A && git diff --cached\n```",
+                "role": "assistant",
+                "tool_calls": null,
+                "function_call": null,
+                "provider_specific_fields": {
+                  "refusal": null
+                }
+              },
+              "provider_specific_fields": {}
+            }
+          ],
+          "usage": {
+            "completion_tokens": 315,
+            "prompt_tokens": 19023,
+            "total_tokens": 19338,
+            "completion_tokens_details": null,
+            "prompt_tokens_details": {
+              "audio_tokens": null,
+              "cached_tokens": 18647,
+              "text_tokens": null,
+              "image_tokens": null
+            }
+          },
+          "service_tier": null,
+          "request_id": "20251202164517ae356ef3cfd741b2"
+        }
+      }
+    },
+    {
+      "role": "user",
+      "content": "diff --git a/django/db/models/functions/datetime.py b/django/db/models/functions/datetime.py\nindex 90e6f41be0..3e140bfa84 100644\n--- a/django/db/models/functions/datetime.py\n+++ b/django/db/models/functions/datetime.py\n@@ -164,11 +164,6 @@ ExtractYear.register_lookup(YearGte)\n ExtractYear.register_lookup(YearLt)\n ExtractYear.register_lookup(YearLte)\n \n-ExtractIsoYear.register_lookup(YearExact)\n-ExtractIsoYear.register_lookup(YearGt)\n-ExtractIsoYear.register_lookup(YearGte)\n-ExtractIsoYear.register_lookup(YearLt)\n-ExtractIsoYear.register_lookup(YearLte)\n \n \n class Now(Func):\ndiff --git a/reproduce_issue.py b/reproduce_issue.py\nnew file mode 100644\nindex 0000000000..e415f05ea8\n--- /dev/null\n+++ b/reproduce_issue.py\n@@ -0,0 +1,58 @@\n+#!/usr/bin/env python\n+\"\"\"\n+Script to reproduce the iso_year lookup issue.\n+\"\"\"\n+\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+settings.configure(\n+    DEBUG=True,\n+    DATABASES={\n+        'default': {\n+            'ENGINE': 'django.db.backends.sqlite3',\n+            'NAME': ':memory:',\n+        }\n+    },\n+    USE_TZ=True,\n+    INSTALLED_APPS=[\n+        'django.contrib.contenttypes',\n+        'django.contrib.auth',\n+    ],\n+    SECRET_KEY='test-secret-key',\n+)\n+\n+django.setup()\n+\n+from django.db import models\n+from django.db.models.functions import ExtractIsoYear\n+from django.db import connection\n+\n+# Create a test model\n+class TestModel(models.Model):\n+    start_date = models.DateField()\n+    \n+    class Meta:\n+        app_label = 'test'\n+\n+# Create table\n+with connection.schema_editor() as schema_editor:\n+    schema_editor.create_model(TestModel)\n+\n+# Test the issue\n+print(\"=== Testing ExtractIsoYear annotation (should work correctly) ===\")\n+qs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\n+print(str(qs.query))\n+\n+print(\"\\n=== Testing ExtractIsoYear annotation in filter (BROKEN - uses BETWEEN) ===\")\n+qs = TestModel.objects.annotate(extracted=ExtractIsoYear('start_date'))\n+print(str(qs.filter(extracted=2020).query))\n+\n+print(\"\\n=== Testing iso_year lookup (BROKEN - uses BETWEEN) ===\")\n+qs = TestModel.objects.filter(start_date__iso_year=2020)\n+print(str(qs.query))\n+\n+print(\"\\n=== Expected behavior for iso_year should use EXTRACT, not BETWEEN ===\")\ndiff --git a/test_comprehensive.py b/test_comprehensive.py\nnew file mode 100644\nindex 0000000000..4ec53a68a5\n--- /dev/null\n+++ b/test_comprehensive.py\n@@ -0,0 +1,87 @@\n+#!/usr/bin/env python\n+\"\"\"\n+Comprehensive test for iso_year lookup fix.\n+\"\"\"\n+\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+settings.configure(\n+    DEBUG=True,\n+    DATABASES={\n+        'default': {\n+            'ENGINE': 'django.db.backends.sqlite3',\n+            'NAME': ':memory:',\n+        }\n+    },\n+    USE_TZ=True,\n+    INSTALLED_APPS=[\n+        'django.contrib.contenttypes',\n+        'django.contrib.auth',\n+    ],\n+    SECRET_KEY='test-secret-key',\n+)\n+\n+django.setup()\n+\n+from django.db import models\n+from django.db.models.functions import ExtractIsoYear, ExtractYear\n+from django.db import connection\n+\n+# Create a test model\n+class TestModel(models.Model):\n+    start_date = models.DateField()\n+    \n+    class Meta:\n+        app_label = 'test'\n+\n+# Create table\n+with connection.schema_editor() as schema_editor:\n+    schema_editor.create_model(TestModel)\n+\n+print(\"=== Testing ISO year lookups (should use EXTRACT) ===\")\n+\n+# Test exact match\n+qs = TestModel.objects.filter(start_date__iso_year=2020)\n+print(f\"iso_year=2020: {str(qs.query)}\")\n+\n+# Test greater than\n+qs = TestModel.objects.filter(start_date__iso_year__gt=2020)\n+print(f\"iso_year__gt=2020: {str(qs.query)}\")\n+\n+# Test greater than or equal\n+qs = TestModel.objects.filter(start_date__iso_year__gte=2020)\n+print(f\"iso_year__gte=2020: {str(qs.query)}\")\n+\n+# Test less than\n+qs = TestModel.objects.filter(start_date__iso_year__lt=2020)\n+print(f\"iso_year__lt=2020: {str(qs.query)}\")\n+\n+# Test less than or equal\n+qs = TestModel.objects.filter(start_date__iso_year__lte=2020)\n+print(f\"iso_year__lte=2020: {str(qs.query)}\")\n+\n+print(\"\\n=== Testing regular year lookups (should still use BETWEEN optimization) ===\")\n+\n+# Test exact match\n+qs = TestModel.objects.filter(start_date__year=2020)\n+print(f\"year=2020: {str(qs.query)}\")\n+\n+# Test greater than\n+qs = TestModel.objects.filter(start_date__year__gt=2020)\n+print(f\"year__gt=2020: {str(qs.query)}\")\n+\n+print(\"\\n=== Testing with annotations ===\")\n+\n+# Test annotation with iso_year\n+qs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\n+print(f\"annotate iso_year=2020: {str(qs.query)}\")\n+\n+# Test annotation with regular year\n+qs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\n+print(f\"annotate year=2020: {str(qs.query)}\")\n+\n+print(\"\\n=== All tests completed ===\")\ndiff --git a/test_iso_year_boundaries.py b/test_iso_year_boundaries.py\nnew file mode 100644\nindex 0000000000..c35a207776\n--- /dev/null\n+++ b/test_iso_year_boundaries.py\n@@ -0,0 +1,93 @@\n+#!/usr/bin/env python\n+\"\"\"\n+Test to demonstrate the difference between ISO year and calendar year boundaries.\n+This shows why the BETWEEN optimization is incorrect for ISO years.\n+\"\"\"\n+\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+settings.configure(\n+    DEBUG=True,\n+    DATABASES={\n+        'default': {\n+            'ENGINE': 'django.db.backends.sqlite3',\n+            'NAME': ':memory:',\n+        }\n+    },\n+    USE_TZ=False,  # Simplify for boundary testing\n+    INSTALLED_APPS=[\n+        'django.contrib.contenttypes',\n+        'django.contrib.auth',\n+    ],\n+    SECRET_KEY='test-secret-key',\n+)\n+\n+django.setup()\n+\n+from django.db import models\n+from django.db.models.functions import ExtractIsoYear, ExtractYear\n+from django.db import connection\n+from datetime import datetime\n+\n+# Create a test model\n+class TestModel(models.Model):\n+    start_date = models.DateField()\n+    \n+    class Meta:\n+        app_label = 'test'\n+\n+# Create table\n+with connection.schema_editor() as schema_editor:\n+    schema_editor.create_model(TestModel)\n+\n+# Create test data around ISO year boundaries\n+# December 31, 2019 is in ISO year 2020 (week 1 of 2020)\n+# January 1, 2020 is in ISO year 2020 (week 1 of 2020)\n+# December 31, 2020 is in ISO year 2020 (week 53 of 2020) \n+# January 1, 2021 is in ISO year 2020 (week 53 of 2020)\n+\n+test_dates = [\n+    datetime(2019, 12, 31).date(),  # ISO year 2020, calendar year 2019\n+    datetime(2020, 1, 1).date(),    # ISO year 2020, calendar year 2020\n+    datetime(2020, 12, 31).date(),  # ISO year 2020, calendar year 2020\n+    datetime(2021, 1, 1).date(),    # ISO year 2020, calendar year 2021\n+]\n+\n+for date in test_dates:\n+    TestModel.objects.create(start_date=date)\n+\n+print(\"=== Test Data ===\")\n+for obj in TestModel.objects.all().order_by('start_date'):\n+    print(f\"{obj.start_date}: Calendar year={obj.start_date.year}, ISO year calculation needed\")\n+\n+print(\"\\n=== Using ExtractIsoYear annotation (correct behavior) ===\")\n+qs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\n+print(f\"Query: {str(qs.query)}\")\n+print(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n+\n+print(\"\\n=== Using year lookup (should include 2020 calendar dates) ===\")\n+qs = TestModel.objects.filter(start_date__year=2020)\n+print(f\"Query: {str(qs.query)}\")\n+print(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n+\n+print(\"\\n=== Using iso_year lookup (should include all ISO year 2020 dates) ===\")\n+qs = TestModel.objects.filter(start_date__iso_year=2020)\n+print(f\"Query: {str(qs.query)}\")\n+print(f\"Results: {list(qs.values_list('start_date', flat=True))}\")\n+\n+print(\"\\n=== Expected Results Analysis ===\")\n+print(\"ISO year 2020 should include:\")\n+print(\"- 2019-12-31 (belongs to week 1 of ISO year 2020)\")\n+print(\"- 2020-01-01 (belongs to week 1 of ISO year 2020)\")  \n+print(\"- 2020-12-31 (belongs to week 53 of ISO year 2020)\")\n+print(\"- 2021-01-01 (belongs to week 53 of ISO year 2020)\")\n+print(\"\")\n+print(\"Calendar year 2020 should include:\")\n+print(\"- 2020-01-01\")\n+print(\"- 2020-12-31\")\n+print(\"\")\n+print(\"This shows why BETWEEN optimization is wrong for ISO years!\")\ndiff --git a/test_other_lookups.py b/test_other_lookups.py\nnew file mode 100644\nindex 0000000000..6daacde6f4\n--- /dev/null\n+++ b/test_other_lookups.py\n@@ -0,0 +1,79 @@\n+#!/usr/bin/env python\n+\"\"\"\n+Test that other lookups still work correctly after our fix.\n+\"\"\"\n+\n+import os\n+import sys\n+import django\n+from django.conf import settings\n+\n+# Configure Django settings\n+settings.configure(\n+    DEBUG=True,\n+    DATABASES={\n+        'default': {\n+            'ENGINE': 'django.db.backends.sqlite3',\n+            'NAME': ':memory:',\n+        }\n+    },\n+    USE_TZ=False,\n+    INSTALLED_APPS=[\n+        'django.contrib.contenttypes',\n+        'django.contrib.auth',\n+    ],\n+    SECRET_KEY='test-secret-key',\n+)\n+\n+django.setup()\n+\n+from django.db import models\n+from django.db.models.functions import ExtractYear, ExtractMonth, ExtractDay, ExtractIsoYear\n+from django.db import connection\n+from datetime import datetime\n+\n+# Create a test model\n+class TestModel(models.Model):\n+    start_date = models.DateField()\n+    \n+    class Meta:\n+        app_label = 'test'\n+\n+# Create table\n+with connection.schema_editor() as schema_editor:\n+    schema_editor.create_model(TestModel)\n+\n+# Create test data\n+test_dates = [\n+    datetime(2020, 6, 15).date(),\n+    datetime(2021, 6, 15).date(),\n+]\n+\n+for date in test_dates:\n+    TestModel.objects.create(start_date=date)\n+\n+print(\"=== Testing other extract lookups still work ===\")\n+\n+# Test month extract\n+qs = TestModel.objects.filter(start_date__month=6)\n+print(f\"Month lookup: {str(qs.query)}\")\n+\n+# Test day extract  \n+qs = TestModel.objects.filter(start_date__day=15)\n+print(f\"Day lookup: {str(qs.query)}\")\n+\n+# Test year extract (should still use BETWEEN)\n+qs = TestModel.objects.filter(start_date__year=2020)\n+print(f\"Year lookup: {str(qs.query)}\")\n+\n+# Test with annotations\n+qs = TestModel.objects.annotate(year=ExtractYear('start_date')).filter(year=2020)\n+print(f\"Annotated year: {str(qs.query)}\")\n+\n+qs = TestModel.objects.annotate(month=ExtractMonth('start_date')).filter(month=6)\n+print(f\"Annotated month: {str(qs.query)}\")\n+\n+qs = TestModel.objects.annotate(iso_year=ExtractIsoYear('start_date')).filter(iso_year=2020)\n+print(f\"Annotated iso_year: {str(qs.query)}\")\n+\n+print(\"\\n=== All lookups working correctly ===\")\n",
+      "timestamp": 1764665137.87889
+    }
+  ],
+  "gold_score": 0,
+  "gold_judge": [],
+  "other": ""
+}

@@ -1,0 +1,382 @@
+{
+  "oid": "tau2-9c4ef750883e4a1dbc47c5d589f8d3db",
+  "task": "The user has been unable to send MMS messages using their messaging app for the past few hours. Customer name: John Smith, phone number: 555-123-2002, current location: abroad in France. They will consider the issue resolved when an MMS message can be successfully sent.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "Hello, I'm hoping you can help me with a problem I'm having. I haven't been able to send any picture messages (I think they're called MMS?) from my phone for the past few hours. I'm not very good with these things, so I'm a bit lost. Can you please help me fix it so I can send my photos again?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nI can help. First, I need to identify your account so I can check your line and settings.\n\nHow would you like to verify your account?\n- Your phone number, or\n- Your full name and date of birth, or\n- Your customer ID\n\nOnce I verify you, I’ll run a quick check and guide you through fixing picture messaging step by step.",
+      "reasoning_content": "\nPlan: Identify the customer first (ask for phone number or customer ID/name+DOB). Then follow MMS troubleshooting: ensure cellular service and mobile data work; check if Data Roaming enabled if traveling; toggle Airplane Mode; verify SIM status; reset APN and reboot; disable Wi-Fi Calling if on; check messaging app permissions; ensure network mode supports MMS (not 2G). Guide step-by-step and use available checks."
+    },
+    {
+      "role": "user",
+      "content": "I'll give you my phone number. It's 555-123-2002. Is that all you need, or do you also need my name and birthday?"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_9cc12ed6d46546e5a99b09c8",
+          "name": "get_customer_by_phone",
+          "function": {
+            "name": "get_customer_by_phone",
+            "arguments": "{\"phone_number\": \"555-123-2002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nUse the phone number to look up the customer. If found, proceed to MMS troubleshooting guided by tech_support_policy: verify service and mobile data, check MMS capability, then work through APN, network mode, data saver, roaming, VPN, Wi-Fi calling, app permissions. Ask user to perform diagnostic checks and apply fixes accordingly."
+    },
+    {
+      "role": "tool",
+      "content": "{\"customer_id\": \"C1001\", \"full_name\": \"John Smith\", \"date_of_birth\": \"1985-06-15\", \"email\": \"john.smith@example.com\", \"phone_number\": \"555-123-2002\", \"address\": {\"street\": \"123 Main St\", \"city\": \"Anytown\", \"state\": \"CA\", \"zip_code\": \"90210\"}, \"account_status\": \"Active\", \"payment_methods\": [{\"method_type\": \"Credit Card\", \"account_number_last_4\": \"1235\", \"expiration_date\": \"12/2026\"}], \"line_ids\": [\"L1001\", \"L1002\", \"L1003\"], \"bill_ids\": [\"B1001\", \"B1002\", \"B1003\"], \"created_at\": \"2025-01-15 10:30:00\", \"last_extension_date\": null, \"goodwill_credit_used_this_year\": 25.0}",
+      "tool_call_id": "call_9cc12ed6d46546e5a99b09c8"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_0f3c93f7d62041f0b0392d27",
+          "name": "get_details_by_id",
+          "function": {
+            "name": "get_details_by_id",
+            "arguments": "{\"id\": \"L1001\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nWe have identified the customer by phone. Next, retrieve details of their lines to determine which line is the user’s current phone number (555-123-2002) and its status. Then guide the user through MMS diagnostics from the tech policy using available check tools, starting with status_bar and can_send_mms, then network_status, apn_settings, wifi_calling_status, app permissions. Keep steps simple for a non-technical user."
+    },
+    {
+      "role": "tool",
+      "content": "{\"line_id\": \"L1001\", \"phone_number\": \"555-123-2001\", \"status\": \"Active\", \"plan_id\": \"P1001\", \"device_id\": \"D1001\", \"data_used_gb\": 3.2, \"data_refueling_gb\": 0.0, \"roaming_enabled\": false, \"contract_end_date\": \"2026-12-31\", \"last_plan_change_date\": \"2025-01-10\", \"last_sim_replacement_date\": null, \"suspension_start_date\": null}",
+      "tool_call_id": "call_0f3c93f7d62041f0b0392d27"
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_ede8dbf980fe4586979bb381",
+          "name": "get_details_by_id",
+          "function": {
+            "name": "get_details_by_id",
+            "arguments": "{\"id\": \"L1002\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nIdentify which line corresponds to the user’s provided number (555-123-2002) from their three lines, then start MMS troubleshooting by asking them to run check_status_bar and can_send_mms on their device to determine if it’s a basic connectivity or MMS-specific issue. Keep instructions simple and step-by-step."
+    },
+    {
+      "role": "tool",
+      "content": "{\"line_id\": \"L1002\", \"phone_number\": \"555-123-2002\", \"status\": \"Active\", \"plan_id\": \"P1002\", \"device_id\": \"D1002\", \"data_used_gb\": 15.1, \"data_refueling_gb\": 0.0, \"roaming_enabled\": false, \"contract_end_date\": \"2026-12-31\", \"last_plan_change_date\": \"2024-12-15\", \"last_sim_replacement_date\": \"2025-01-20\", \"suspension_start_date\": null}",
+      "tool_call_id": "call_ede8dbf980fe4586979bb381"
+    },
+    {
+      "role": "assistant",
+      "content": "\nThanks, John. I’ve found your account and your line ending in 2002. It’s active, so we should be able to fix this.\n\nLet’s do a few simple checks. I’ll guide you step by step.\n\nFirst, please look at the top of your phone screen and tell me what icons you see:\n- Is there an airplane icon (✈️)?\n- What signal bars do you see next to “5G/4G/LTE” (📶)?\n- Do you see a mobile data icon like “📱 Data Enabled”?\n\nNext, please try to send a picture message to your own number to see what happens. If it fails, tell me what error message you see.\n\nIf you’re able to, we can also run a couple of quick tests:\n- On your device, can you run these two checks and share the results?\n  1) “can_send_mms”\n  2) “check_status_bar”\n\nIf you’re not sure how to run those, just tell me what you see on the status bar and any error message from the failed picture message, and we’ll go from there.",
+      "reasoning_content": "\nWe identified the line L1002 for phone 555-123-2002 (Active). Next, guide the user through basic MMS checks step by step, starting with status bar and MMS capability, then connectivity (Airplane Mode, mobile data, network type), then APN/MMSC, Wi-Fi Calling, VPN, data saver, and messaging app permissions. Keep language simple and wait for user results between steps."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_sXZ1QgqaOgoXtO8cMDlklKLB",
+          "name": "check_status_bar",
+          "function": {
+            "name": "check_status_bar",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Status Bar: 📶⁴ Excellent | 5G | 📵 Data Disabled | 🔋 80%",
+      "tool_call_id": "call_sXZ1QgqaOgoXtO8cMDlklKLB"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_IXlVsqzzxyrJIlq66QurIyjK",
+          "name": "can_send_mms",
+          "function": {
+            "name": "can_send_mms",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Your messaging app cannot send MMS messages.",
+      "tool_call_id": "call_IXlVsqzzxyrJIlq66QurIyjK"
+    },
+    {
+      "role": "user",
+      "content": "At the top of my screen, I see that I have full signal bars and it says 5G, but it also shows that data is disabled. I don’t see an airplane icon. \n\nAlso, when I try to send a picture message to myself, it just says it can’t send right now—no other details. Is the data icon the problem?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYes, that’s very likely the issue. Picture messages (MMS) need mobile data turned on to send, even on Wi-Fi.\n\nLet’s fix it:\n1) Turn on mobile data:\n- Go to Settings > Mobile data (or Cellular) and make sure the Mobile data switch is ON.\n- If it’s already on, toggle it OFF, wait 10 seconds, then toggle it back ON.\n\n2) After turning mobile data on, please try sending that picture to yourself again and tell me if it goes through.\n\nIf it still doesn’t work, we’ll do a couple of quick checks:\n- Is Data Saver mode on? (If you’re not sure, tell me what you see under Settings > Mobile data > Data Saver.)\n- Are you connected to any VPN? If yes, please turn it off and retry the MMS.\n\nLet me know the results after step 1, and we’ll continue from there.",
+      "reasoning_content": "\nUser reports full 5G signal but mobile data disabled. Next step: confirm mobile data is disabled, then guide to toggle data ON, retry MMS, and if needed check data saver, APN, VPN, and reboot. Provide simple steps and ask for confirmation after each."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_QpKqXF1Izi8ybdIuNHxPalCw",
+          "name": "toggle_data",
+          "function": {
+            "name": "toggle_data",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Mobile Data is now ON.\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_QpKqXF1Izi8ybdIuNHxPalCw"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_8zzqTKeqexhl89DnpOqrWzs3",
+          "name": "can_send_mms",
+          "function": {
+            "name": "can_send_mms",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Your messaging app cannot send MMS messages.",
+      "tool_call_id": "call_8zzqTKeqexhl89DnpOqrWzs3"
+    },
+    {
+      "role": "user",
+      "content": "Okay, I’ve managed to turn mobile data on—the icon at the top changed, so it looks like data is enabled now. But I tried sending the picture again, and it still says it can’t send. What should I do next? This is getting a bit frustrating."
+    },
+    {
+      "role": "assistant",
+      "content": "\nI understand it’s frustrating. Let’s keep going step by step—there are a couple more common fixes.\n\n1) Check Wi-Fi Calling:\n- If Wi-Fi Calling is ON, try turning it OFF temporarily.\n- Then try sending the picture again.\n(Where to find it: Settings > Mobile/Cellular > Wi-Fi Calling, or Settings > Phone > Wi-Fi Calling.)\n\n2) Reset network settings for messages (APN reset):\n- Go to Settings > Mobile/Cellular > Mobile Data Options > Mobile Data Network (or APN settings).\n- Tap Reset to Default (or Reset APN).\n- After resetting, restart your phone.\n- Once it’s back on, try sending the picture again.\n\n3) Quick permissions check for the messaging app:\n- Go to Settings > Apps > Messaging (or Messages) > Permissions.\n- Make sure it has permissions for Storage and SMS.\n- If either is denied, allow them and retry.\n\nIf it still fails after these steps:\n- Please let me know whether Wi-Fi Calling was ON before you turned it off.\n- Tell me if you saw an APN or network settings option and whether you reset it.\n- If you’re comfortable, we can also try removing and reinserting your SIM card (a quick reseat) and then restart the phone.\n\nLet me know the results of step 1 first, and we’ll proceed.",
+      "reasoning_content": "\nProceed with MMS troubleshooting after mobile data enabled. Ask user to check Wi-Fi Calling toggle (off if on), check and reset APN if needed, confirm at least 3G/4G, and reseat SIM if still failing. Keep steps concise and user-friendly."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_sYwojyeu8HJVeXnU15gqogwS",
+          "name": "check_wifi_calling_status",
+          "function": {
+            "name": "check_wifi_calling_status",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Wi-Fi Calling is currently turned OFF.",
+      "tool_call_id": "call_sYwojyeu8HJVeXnU15gqogwS"
+    },
+    {
+      "role": "user",
+      "content": "I checked and Wi-Fi Calling is currently turned off on my phone, so I don't think that's the issue. What should I try next?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nGreat, thanks for checking. The next best step is to reset the APN (network) settings for messaging and then restart your phone.\n\nHere’s how:\n1) Reset APN settings:\n- Open Settings > Mobile/Cellular > Mobile Data Options > Mobile Data Network (or it may say APN).\n- Look for a “Reset to Default” or “Reset APN” option and tap it.\n- Confirm the reset if prompted.\n\n2) Restart your phone:\n- Power the phone off, wait about 10 seconds, then turn it back on.\n\n3) Try sending the picture again.\n\nIf it still doesn’t work after the APN reset and restart, please also:\n- Check the network mode: go to Settings > Mobile/Cellular > Mobile Data Options > Network Mode. Make sure it’s not set to 2G. If it is, change it to 4G/5G preferred.\n- Verify app permissions: Settings > Apps > Messages > Permissions, ensure Storage and SMS are allowed.\n\nLet me know if the picture sends after the APN reset and restart. If not, tell me what network mode it shows and whether the permissions are granted, and we’ll continue from there.",
+      "reasoning_content": "\nUser has Wi-Fi Calling off and mobile data on. Next step per tech policy is APN reset, with reboot. Also check network mode (must not be 2G) and app permissions (storage, SMS). Then, if still fails, consider data plan limits and line roaming. For now, guide user to check APN settings and reset if needed, then reboot, then test MMS. Then ask to run network status check if still failing."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_o0WcSILldWehP4Yy928txIpG",
+          "name": "reset_apn_settings",
+          "function": {
+            "name": "reset_apn_settings",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "APN settings will reset at reboot.\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_o0WcSILldWehP4Yy928txIpG"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_hi9RQnm9dDThUtT9I7EdA7AS",
+          "name": "reboot_device",
+          "function": {
+            "name": "reboot_device",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Resetting APN settings...\nRestarting network services...\nStatus Bar: 📶⁴ Excellent | 5G | 📱 Data Enabled | 🔋 80%",
+      "tool_call_id": "call_hi9RQnm9dDThUtT9I7EdA7AS"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_XO1Nz8MkKGP6ePOXxINDqTMl",
+          "name": "can_send_mms",
+          "function": {
+            "name": "can_send_mms",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Your messaging app cannot send MMS messages.",
+      "tool_call_id": "call_XO1Nz8MkKGP6ePOXxINDqTMl"
+    },
+    {
+      "role": "user",
+      "content": "I followed your instructions: I reset the APN settings and restarted my phone. But I tried sending a picture again, and it still won’t go through.\n\nNow I’m getting a bit worried—is this going to erase anything on my phone, like my photos? What should I check next about the network mode or permissions?"
+    },
+    {
+      "role": "assistant",
+      "content": "\nDon’t worry—resetting the APN settings does not erase your photos or any personal data. It only restores the connection settings.\n\nLet’s check two key items next:\n\n1) Network mode check:\n- Go to Settings > Mobile/Cellular > Mobile Data Options > Network Mode (or it may say Preferred network type).\n- If it’s set to 2G or 3G only, change it to “4G/5G preferred” or “5G/4G/LTE” (whichever option lets it use 4G or 5G).\n- After changing, wait about 30 seconds, then try sending the picture again.\n\n2) Messaging app permissions:\n- Go to Settings > Apps > Messages (or Messaging) > Permissions.\n- Ensure both “Storage” (or Files and media) and “SMS” are allowed.\n- If either was denied, allow them and retry the picture message.\n\nIf both are correct and it still fails:\n- Please let me know the exact network mode you have selected and what permissions are listed.\n- We can also try re-seating the SIM: power off the phone, remove the SIM card for about 30 seconds, reinsert it, power back on, and retry sending the picture. This won’t erase anything either.\n\nTell me the results of the network mode and permissions check, and I’ll guide you to the next step.",
+      "reasoning_content": "\nReassure user APN reset doesn’t erase photos. Ask them to check network mode (not 2G) and messaging app permissions (Storage and SMS). If correct, propose SIM reseat and further network steps. Keep instructions simple and step-by-step."
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_bDstqmwRLpIX65jyYcuaKQv7",
+          "name": "check_network_mode_preference",
+          "function": {
+            "name": "check_network_mode_preference",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "Network Mode Preference: 4g_5g_preferred",
+      "tool_call_id": "call_bDstqmwRLpIX65jyYcuaKQv7"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_LjVdlwKWGNgGgSJPMeGS5BPw",
+          "name": "check_installed_apps",
+          "function": {
+            "name": "check_installed_apps",
+            "arguments": "{}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "The following apps are installed on the phone: messaging, browser",
+      "tool_call_id": "call_LjVdlwKWGNgGgSJPMeGS5BPw"
+    },
+    {
+      "role": "user",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_Dan3eXDExVMXEPIVya19qn9n",
+          "name": "check_app_permissions",
+          "function": {
+            "name": "check_app_permissions",
+            "arguments": "{\"app_name\": \"messaging\"}"
+          },
+          "type": "function"
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "content": "App 'messaging' has permission for: sms, storage, phone.",
+      "tool_call_id": "call_Dan3eXDExVMXEPIVya19qn9n"
+    },
+    {
+      "role": "user",
+      "content": "I checked, and my network mode is set to \"4G/5G preferred.\" I also looked at the permissions for the messaging app, and it has SMS and storage both allowed. \n\nIs there anything else I should try? I’m just starting to feel a little flustered by all of this."
+    },
+    {
+      "role": "assistant",
+      "content": null,
+      "tool_calls": [
+        {
+          "id": "call_f70c1eef78434f04920a2e6d",
+          "name": "transfer_to_human_agents",
+          "function": {
+            "name": "transfer_to_human_agents",
+            "arguments": "{\"summary\": \"Customer John Smith (Customer ID: C1001, Phone: 555-123-2002, Line ID: L1002). Account status Active. Issue: Unable to send MMS for several hours. Troubleshooting completed: (1) Mobile data was disabled; user enabled it. (2) Wi-Fi Calling already off. (3) APN reset performed and device rebooted. (4) Network mode set to 4G/5G preferred. (5) Messaging app has SMS and Storage permissions. MMS still fails; no specific error shown. Signal shows 5G full bars. Plan ID P1002, Device ID D1002, roaming disabled. Issue persists after standard checks; requires deeper MMS/SMSC/MMSC configuration or account-level provisioning investigation.\"}"
+          },
+          "type": "function"
+        }
+      ],
+      "reasoning_content": "\nEscalate to technical support due to persistent MMS failure after standard troubleshooting steps (mobile data ON, Wi-Fi Calling OFF, APN reset and reboot, network mode OK, permissions OK). Prepare a concise summary including account identifier, phone number, line status, plan/device, and steps performed. Use transfer_to_human_agents tool, then inform the user per policy."
+    },
+    {
+      "role": "tool",
+      "content": "Transfer successful",
+      "tool_call_id": "call_f70c1eef78434f04920a2e6d"
+    },
+    {
+      "role": "assistant",
+      "content": "\nYOU ARE BEING TRANSFERRED TO A HUMAN AGENT. PLEASE HOLD ON.",
+      "reasoning_content": "\nAfter transferring to human agents as per tool result, I must send the user the required transfer message exactly."
+    },
+    {
+      "role": "user",
+      "content": "###TRANSFER###"
+    }
+  ],
+  "gold_score": 0,
+  "gold_judge": [
+    "###FAIL###Info:{'env': {'note': \"ENV_ASSERTION reward:0.0,DB_reward:0.0, env_assertion_reward:0.0, Eval info : \\n Database mismatched. db_reward set to 0. \\n\\n Env mismatched. env_assertion_reward set to 0. Unmatched result:env_assertion=EnvAssertion(env_type='user', func_name='assert_can_send_mms', arguments={'expected_status': True}, assert_value=True, message=None) met=False reward=0.0\\n Env mismatched. env_assertion_reward set to 0. Unmatched result:env_assertion=EnvAssertion(env_type='assistant', func_name='assert_data_refueling_amount', arguments={'customer_id': 'C1001', 'expected_amount': 2, 'line_id': 'L1002'}, assert_value=True, message=None) met=False reward=0.0\"}, 'nl': {'note': 'No nl_assertions to evaluate. Set to 1.0 as default.'}, 'communicate': {'note': 'No communicate_info to evaluate. Set to 1.0 as default.'}, 'action': {'note': \"ACTION reward:0.0, unfullfilled results : [ActionCheck(action=Action(action_id='refuel_data_3', requestor='assistant', name='refuel_data', arguments={'customer_id': 'C1001', 'gb_amount': 2, 'line_id': 'L1002'}, info=None, compare_args=None), action_match=False, action_reward=0.0), ActionCheck(action=Action(action_id='enable_roaming_4', requestor='assistant', name='enable_roaming', arguments={'customer_id': 'C1001', 'line_id': 'L1002'}, info=None, compare_args=None), action_match=False, action_reward=0.0)]\"}}"
+  ],
+  "other": ""
+}
