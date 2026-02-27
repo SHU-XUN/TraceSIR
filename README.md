@@ -9,8 +9,8 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Compatible-412991.svg?logo=openai&logoColor=white)](https://openai.com/)
-[![arXiv](https://img.shields.io/badge/arXiv-2602.XXXXX-b31b1b.svg)](https://arxiv.org/abs/2602.XXXXX)
-[![YouTube](https://img.shields.io/badge/YouTube-Demo-FF0000.svg?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=XXXXXXXX)
+[![arXiv](https://img.shields.io/badge/arXiv-2603.XXXXX-b31b1b.svg)](https://arxiv.org/abs/2603.XXXXX)
+[![YouTube](https://img.shields.io/badge/YouTube-Demo-FF0000.svg?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=2HBMuId0Cos)
 [![Docker Image](https://img.shields.io/badge/Docker-Download-2496ED.svg?logo=docker&logoColor=white)](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz)
 
 ![TraceSIR](assets/fig1.svg)
@@ -95,11 +95,13 @@ open http://localhost:8000
 
 ## 📥 Download
 
-### Release Packages
+### Release Packages and Other Materials
 
 | Package | Size | Description | Download |
 |---------|------|-------------|----------|
 | **Docker Image** | ~160 MB | Pre-built Docker image | [⬇️ TraceSIR-v1.0.0-docker.tar.gz](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz) |
+| **Demo Video**| 2min 25s | Watch Demonstration Video | [🎥 TraceSIR-demo-video](https://www.youtube.com/watch?v=2HBMuId0Cos)
+| **Demo Video**| ~226 MB | Download Demonstration Video | [⬇️ TraceSIR-demo-video](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR.Demo.mp4.zip)
 
 ---
 
@@ -143,6 +145,7 @@ If you use TraceSIR in your research, please cite:
 ```bibtex
 @misc{tracesir2026,
   title={TraceSIR: A Multi-Agent Framework for Structured Analysis and Reporting of Agentic Execution Traces}
+  ...
 }
 ```
 
