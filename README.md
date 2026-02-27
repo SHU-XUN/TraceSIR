@@ -135,6 +135,8 @@ TraceSIR accepts trace data in **TraceFormat-User** format (JSON):
 
 ![TraceSIR Demo](assets/fig2.svg)
 
+Note: To meet the team’s internal real-world usage requirements, the deployed demo is implemented in Chinese, and the default generated reports are also in Chinese. If reports in other languages are required, this can be specified in the additional requirements during the report generation stage.
+
 ---
 
 
