@@ -11,7 +11,7 @@
 [![OpenAI](https://img.shields.io/badge/OpenAI-Compatible-412991.svg?logo=openai&logoColor=white)](https://openai.com/)
 [![arXiv](https://img.shields.io/badge/arXiv-2602.XXXXX-b31b1b.svg)](https://arxiv.org/abs/2602.XXXXX)
 [![YouTube](https://img.shields.io/badge/YouTube-Demo-FF0000.svg?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=XXXXXXXX)
-[![Docker Image](https://img.shields.io/badge/Docker-Download-2496ED.svg?logo=docker&logoColor=white)](https://github.com/yourname/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz)
+[![Docker Image](https://img.shields.io/badge/Docker-Download-2496ED.svg?logo=docker&logoColor=white)](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz)
 
 ![TraceSIR](assets/fig1.svg)
 
@@ -47,7 +47,7 @@
 
 ```bash
 # Download Docker image
-wget https://github.com/YOUR_USERNAME/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz
+wget https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz
 
 # Load image
 docker load -i TraceSIR-v1.0.0-docker.tar.gz
@@ -67,7 +67,7 @@ open http://localhost:8000
 
 ```bash
 # Clone repository
-git clone https://github.com/YOUR_USERNAME/TraceSIR.git
+git clone https://github.com/SHU-XUN/TraceSIR.git
 cd TraceSIR
 
 # Install dependencies
@@ -99,7 +99,7 @@ open http://localhost:8000
 
 | Package | Size | Description | Download |
 |---------|------|-------------|----------|
-| **Docker Image** | ~160 MB | Pre-built Docker image | [⬇️ TraceSIR-v1.0.0-docker.tar.gz](https://github.com/YOUR_USERNAME/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz) |
+| **Docker Image** | ~160 MB | Pre-built Docker image | [⬇️ TraceSIR-v1.0.0-docker.tar.gz](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz) |
 
 ---
 
