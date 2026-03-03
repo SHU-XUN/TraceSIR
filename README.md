@@ -9,7 +9,7 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)](https://www.docker.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![OpenAI](https://img.shields.io/badge/OpenAI-Compatible-412991.svg?logo=openai&logoColor=white)](https://openai.com/)
-[![arXiv](https://img.shields.io/badge/arXiv-2603.XXXXX-b31b1b.svg)](https://arxiv.org/abs/2603.XXXXX)
+[![arXiv](https://img.shields.io/badge/arXiv-2603.00623-b31b1b.svg)](https://arxiv.org/abs/2603.00623)
 [![YouTube](https://img.shields.io/badge/YouTube-Demo-FF0000.svg?logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=2HBMuId0Cos)
 [![Docker Image](https://img.shields.io/badge/Docker-Download-2496ED.svg?logo=docker&logoColor=white)](https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz)
 
@@ -40,7 +40,7 @@
 ### Prerequisites
 
 - **Docker** (recommended) or **Python 3.11+**
-- **LLM API credentials** (OpenAI, Azure, etc.)
+- **LLM API credentials** (OpenAI, etc.)
 - **Port 8000** available
 
 ### Option 1: Docker Image (Recommended)
@@ -84,7 +84,7 @@ open http://localhost:8000
 
 1. Open http://localhost:8000 in your browser
 2. Fill in LLM configuration:
-   - **Model**: e.g., `gpt-4o-mini`
+   - **Model**: e.g., `gpt-5.2`
    - **API Key**: Your API key
    - **Base URL**: e.g., `https://api.openai.com/v1`
 3. Upload trace data (JSON or ZIP)
@@ -145,9 +145,14 @@ Note: To meet the team’s internal real-world usage requirements, the deployed 
 If you use TraceSIR in your research, please cite:
 
 ```bibtex
-@misc{tracesir2026,
-  title={TraceSIR: A Multi-Agent Framework for Structured Analysis and Reporting of Agentic Execution Traces}
-  ...
+@misc{yang2026tracesirmultiagentframeworkstructured,
+      title={TraceSIR: A Multi-Agent Framework for Structured Analysis and Reporting of Agentic Execution Traces}, 
+      author={Shu-Xun Yang and Cunxiang Wang and Haoke Zhang and Wenbo Yu and Lindong Wu and Jiayi Gui and Dayong Yang and Yukuo Cen and Zhuoer Feng and Bosi Wen and Yidong Wang and Lucen Zhong and Jiamin Ren and Linfeng Zhang and Jie Tang},
+      year={2026},
+      eprint={2603.00623},
+      archivePrefix={arXiv},
+      primaryClass={cs.AI},
+      url={https://arxiv.org/abs/2603.00623}, 
 }
 ```
 
