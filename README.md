@@ -47,7 +47,7 @@
 
 ```bash
 # Download Docker image
-wget https://github.com/SHU-XUN/TraceSIR/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz
+wget https://anonymous.4open.science/r/TraceSIR-8888/releases/download/v1.0.0/TraceSIR-v1.0.0-docker.tar.gz
 
 # Load image
 docker load -i TraceSIR-v1.0.0-docker.tar.gz
@@ -67,7 +67,7 @@ open http://localhost:8000
 
 ```bash
 # Clone repository
-git clone https://github.com/SHU-XUN/TraceSIR.git
+git clone https://anonymous.4open.science/r/TraceSIR-8888.git
 cd TraceSIR
 
 # Install dependencies
