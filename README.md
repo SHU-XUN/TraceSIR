@@ -145,15 +145,7 @@ Note: To meet the team’s internal real-world usage requirements, the deployed 
 If you use TraceSIR in your research, please cite:
 
 ```bibtex
-@misc{yang2026tracesirmultiagentframeworkstructured,
-      title={TraceSIR: A Multi-Agent Framework for Structured Analysis and Reporting of Agentic Execution Traces}, 
-      author={Shu-Xun Yang and Cunxiang Wang and Haoke Zhang and Wenbo Yu and Lindong Wu and Jiayi Gui and Dayong Yang and Yukuo Cen and Zhuoer Feng and Bosi Wen and Yidong Wang and Lucen Zhong and Jiamin Ren and Linfeng Zhang and Jie Tang},
-      year={2026},
-      eprint={2603.00623},
-      archivePrefix={arXiv},
-      primaryClass={cs.AI},
-      url={https://arxiv.org/abs/2603.00623}, 
-}
+
 ```
 
 
