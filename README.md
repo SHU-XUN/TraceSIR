@@ -2,7 +2,7 @@
 
 # TraceSIR
 
-### A Multi-Agent Framework for Structured Analysis and Reporting of Agentic Execution Traces
+### A Multi-Agent Critique Framework for Structured Analysis and Reporting of Agentic Execution Traces
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/Python-3.11+-3776AB.svg?logo=python&logoColor=white)](https://www.python.org/downloads/)
